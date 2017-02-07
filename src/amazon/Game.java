@@ -120,7 +120,7 @@ public class Game {
 		return board;
 	}
 
-	/** Run the game. */
+	/** Create and run the game. */
 	public static void main(String[] args) {
 		Game g = new Game(2, "group5", "group5");
 	}
