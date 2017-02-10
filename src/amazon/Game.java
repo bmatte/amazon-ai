@@ -37,7 +37,7 @@ public class Game {
 	 */
 	public Game(int viewOption, String user, String pass) {
 		// Create new board model.
-		BoardModel boardModel = new BoardArray();
+		final BoardModel boardModel = new BoardArray(); 
 
 		// Check if view should be shown.
 		if (viewOption == 1) {
@@ -50,7 +50,7 @@ public class Game {
 				public void run() {
 					try {
 						// Create board view.
-						view = new BoardWindow(boardModel, true, false, true);
+						view = new BoardWindow(boardModel, true, false, true); //error when BoardModel is not final
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
