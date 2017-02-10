@@ -3,7 +3,7 @@ package amazon.board;
 import java.util.ArrayList;
 
 /**
- * "Game of Amazons" board model, modeling board positions and checking for
+ * "Game of Amazons" board model, modeling board locations and checking for
  * valid moves.
  */
 public interface BoardModel {
@@ -20,7 +20,7 @@ public interface BoardModel {
 	byte AW = 4;
 
 	/**
-	 * Validate a given move.
+	 * Validate a given player turn, i.e. queen move and arrow.
 	 * 
 	 * @param rQI
 	 *            Initial queen row index.
@@ -34,9 +34,9 @@ public interface BoardModel {
 	 *            Arrow row index.
 	 * @param cA
 	 *            Arrow column index.
-	 * @return Validity of move positions.
+	 * @return Validity of move locations.
 	 */
-	boolean validMove(int rQI, int cQI, int rQF, int cQF, int rA, int cA);
+	boolean validTurn(int rQI, int cQI, int rQF, int cQF, int rA, int cA);
 
 	/**
 	 * Perform a move, after determining its validity.
@@ -64,10 +64,10 @@ public interface BoardModel {
 
 	/**
 	 * @param r
-	 *            Row of position.
+	 *            Row of location.
 	 * @param c
-	 *            Column of position.
-	 * @return The value of a given board position.
+	 *            Column of location.
+	 * @return The value of a given board location.
 	 */
 	int get(int r, int c);
 

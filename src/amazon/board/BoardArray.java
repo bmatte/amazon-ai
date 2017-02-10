@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
- * Array board model of the "Game of Amazons", modeling board positions and
+ * Array board model of the "Game of Amazons", modeling board locations and
  * checking for valid moves.
  */
 // TODO check for win state.
@@ -66,24 +66,80 @@ public class BoardArray implements BoardModel {
 		this.whiteTurn = whiteTurn;
 	}
 
-	/*
-	 * (non-Javadoc)
+	/**
+	 * Validate a given queen move, without checking arrow.
 	 * 
-	 * @see amazon.board.BoardModel#validMove(int, int, int, int, int, int)
+	 * @param rQI
+	 *            Initial queen row index.
+	 * @param cQI
+	 *            Initial queen column index.
+	 * @param rQF
+	 *            Final queen row index.
+	 * @param cQF
+	 *            Final queen column index.
+	 * @return Validity of queen move.
 	 */
-	@Override
-	public boolean validMove(int rQI, int cQI, int rQF, int cQF, int rA, int cA) {
-		// Check if initial position isn't current player's queen.
+	public boolean validQueen(int rQI, int cQI, int rQF, int cQF) {
+		// Check if initial location isn't current player's queen.
 		if (board[rQI][cQI] != (whiteTurn ? W : B))
 			return false;
-		// Check if final position isn't empty.
+		// Check if final location isn't empty.
 		if (board[rQF][cQF] != E)
 			return false;
-		// Check if arrow position isn't empty.
-		if (board[rA][cA] != E)
+		// Check queen move path.
+		if (!validMove(rQI, cQI, cQF, cQF))
 			return false;
-		// TODO Check if queen final and arrow locations are valid move.
 		return true;
+	}
+
+	/**
+	 * Validate a given arrow, assuming move is valid.
+	 * 
+	 * @param rQI
+	 *            Initial queen row index.
+	 * @param cQI
+	 *            Initial queen column index.
+	 * @param rQF
+	 *            Final queen row index.
+	 * @param cQF
+	 *            Final queen column index.
+	 * @param rA
+	 *            Arrow row index.
+	 * @param cA
+	 *            Arrow column index.
+	 * @return Validity of arrow move.
+	 */
+	public boolean validArrow(int rQI, int cQI, int rQF, int cQF, int rA, int cA) {
+		// Check if arrow location isn't empty, and allow initial queen
+		// location.
+		if (board[rA][cA] != E && !(rA == rQI && cA == cQI))
+			return false;
+		// Check arrow move path.
+		if (!validMove(rQF, cQF, rA, cA))
+			return false;
+		return true;
+	}
+
+	/**
+	 * 
+	 * @param rQI
+	 *            Initial row index.
+	 * @param cQI
+	 *            Initial column index.
+	 * @param rQF
+	 *            Final row index.
+	 * @param cQF
+	 *            Final column index.
+	 * @return Validity of piece move.
+	 */
+	public boolean validMove(int rI, int cI, int rF, int cF) {
+		// TODO Check if move is valid.
+		return true;
+	}
+
+	@Override
+	public boolean validTurn(int rQI, int cQI, int rQF, int cQF, int rA, int cA) {
+		return validQueen(rQI, cQI, rQF, cQF) && validArrow(rQI, cQI, rQF, cQF, rA, cA);
 	}
 
 	/*
@@ -94,11 +150,11 @@ public class BoardArray implements BoardModel {
 	@Override
 	public boolean move(int rQI, int cQI, int rQF, int cQF, int rA, int cA) {
 		// Check if move is invalid.
-		if (!validMove(rQI, cQI, rQF, cQF, rA, cA))
+		if (!validTurn(rQI, cQI, rQF, cQF, rA, cA))
 			return false;
-		// Move whatever queen to new position.
+		// Move whatever queen to new location.
 		board[rQF][cQF] = board[rQI][cQI];
-		// Make initial position empty.
+		// Make initial location empty.
 		board[rQI][cQI] = E;
 		// Place arrow.
 		board[rA][cA] = E;
