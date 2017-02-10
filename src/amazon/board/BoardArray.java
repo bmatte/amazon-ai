@@ -121,6 +121,8 @@ public class BoardArray implements BoardModel {
 	}
 
 	/**
+	 * Validate a given piece move path, be it queen or arrow. Assumes
+	 * destination spot is empty and will not check it.
 	 * 
 	 * @param rQI
 	 *            Initial row index.
@@ -133,8 +135,41 @@ public class BoardArray implements BoardModel {
 	 * @return Validity of piece move.
 	 */
 	public boolean validMove(int rI, int cI, int rF, int cF) {
-		// TODO Check if move is valid.
-		return true;
+		// Check if vertical move.
+		if (cI == cF) {
+			// Up or down.
+			int d = rF < rI ? -1 : 1;
+			// Check locations between start and destination.
+			for (int r = 0; r < Math.abs(rF - rI) - 1; r++)
+				if (board[rI + d * r][cI] != E)
+					return false;
+			// Check if horizontal move.
+		} else if (rI == rF) {
+			// Left or right.
+			int d = cF < cI ? -1 : 1;
+			// Check locations between start and destination.
+			for (int c = 0; c < Math.abs(cF - cI) - 1; c++)
+				if (board[rI][cI + d * c] != E)
+					return false;
+			// Check if upward sloping diagonal move.
+		} else if (rF - rI == -(cF - cI)) {
+			// Left or right.
+			int d = cF < cI ? -1 : 1;
+			// Check locations between start and destination.
+			for (int c = 0; c < Math.abs(cF - cI) - 1; c++)
+				if (board[rI - d * c][cI + d * c] != E)
+					return false;
+			// Check if downward sloping diagonal move.
+		} else if (rF - rI == cF - cI) {
+			// Left or right.
+			int d = cF < cI ? -1 : 1;
+			// Check locations between start and destination.
+			for (int c = 0; c < Math.abs(cF - cI) - 1; c++)
+				if (board[rI + d * c][cI + d * c] != E)
+					return false;
+		}
+		// Move cannot be valid.
+		return false;
 	}
 
 	@Override
