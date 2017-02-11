@@ -80,4 +80,13 @@ public interface BoardModel {
 	/** Get the current state of the board. */
 	byte[][] getState();
 
+	/**
+	 * Return a board array representing the player ownership of chambers. Each
+	 * player is represented by their queen label, ties are empty space, and
+	 * other locations are -1.
+	 * 
+	 * @return Validity of piece move.
+	 */
+	public byte[][] findChambers();
+
 }

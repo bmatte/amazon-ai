@@ -128,6 +128,9 @@ public class BoardWindow implements BoardView {
 				g.drawLine(cP + width, cP + 0, cP + width, cP + width);
 				g.drawLine(cP + 0, cP + width, cP + width, cP + width);
 
+				// Get chambers.
+				byte[][] chambers = boardModel.findChambers();
+
 				// For each row.
 				for (int i = 0; i < boardModel.getRowCount(); i++) {
 					// For each column.
@@ -208,6 +211,22 @@ public class BoardWindow implements BoardView {
 							drawArrow(gg, gc(w, d), gc(w, l), gc(w, d), x, y, tW);
 						}
 
+						// XXX Draw grid of found chambers beside game board for
+						// debugging.
+						switch (chambers[i][j]) {
+						case (BoardModel.B):
+							g.setColor(gc(b, p));
+							break;
+						case (BoardModel.W):
+							g.setColor(gc(w, m));
+							break;
+						case (BoardModel.E):
+							g.setColor(gc(n, m));
+							break;
+						case (-1):
+							g.setColor(gc(n, d));
+						}
+						g.fillRect(x + width + cP, y, tW, tW);
 					}
 				}
 			}
