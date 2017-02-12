@@ -71,73 +71,84 @@ public class BoardArray implements BoardModel {
 	 * 
 	 * @see amazon.board.BoardModel#findChambers()
 	 */
-	public byte[][] findChambers() {
-		// Initialize chambers as un-owned.
-		byte[][] chambers = new byte[getRowCount()][getColumnCount()];
-		for (int i = 0; i < chambers.length; i++)
-			for (int j = 0; j < chambers[i].length; j++)
-				chambers[i][j] = -1;
+	public byte[][][] findChambers() {
+		// Initialize chamber labels and count as 0.
+		byte[][][] chambers = new byte[3][getRowCount()][getColumnCount()];
+		// TODO Possibly make chamber queen counts initialized at -1 for
+		// non-chambers.
 		// Checked board locations.
 		boolean[][] checked = new boolean[getRowCount()][getColumnCount()];
+		// Chamber label, reserving 0 for non-chambers.
+		byte label = 1;
 		// Scan through all locations.
-		for (int i = 0; i < chambers.length; i++) {
-			for (int j = 0; j < chambers[i].length; j++) {
-				// Don't re-check locations.
-				if (checked[i][j])
+		for (int i = 0; i < getRowCount(); i++) {
+			for (int j = 0; j < getColumnCount(); j++) {
+				// Don't re-check locations, or arrow occupied locations.
+				if (checked[i][j] || board[i][j] == AB || board[i][j] == AW)
 					continue;
 				// List of locations to check.
 				ArrayList<int[]> check = new ArrayList<>();
 				// List of found chamber locations.
 				ArrayList<int[]> found = new ArrayList<>();
-				// Chamber initially un-owned.
-				byte owner = -1;
-				// byte owner = (Math.random() > 0.5 ? B : W);
+				// Number of queens found in current chamber.
+				byte bCount = 0;
+				byte wCount = 0;
 				// Start at current scan location.
 				check.add(new int[] { i, j });
+
 				// Check location and spread out if empty.
 				while (check.size() > 0) {
 					// Get location to check.
 					int[] l = check.remove(0);
-					// Mark location as checked.
-					checked[l[0]][l[1]] = true;
 					// Get board value at check location.
 					byte value = board[l[0]][l[1]];
+
 					// Check if empty or queen.
 					if (value == E || value == B || value == W) {
+						// Add location to found list.
 						found.add(new int[] { l[0], l[1] });
-						// If queen is found.
-						if (value == B || value == W) {
-							// If no owner, assign ownership.
-							if (owner == -1)
-								owner = value;
-							// If different owner, share ownership.
-							else if (owner != value)
-								owner = E;
-						}
-					}
-					// Add neighbor locations if empty and unchecked.
-					for (int rN = -1; rN <= 1; rN++) {
-						// Check for border.
-						if (l[0] + rN < 0 || l[0] + rN >= getRowCount())
-							continue;
-						for (int cN = -1; cN <= 1; cN++) {
+						// Increase count if queen is found.
+						if (value == B)
+							bCount++;
+						else if (value == W)
+							wCount++;
+
+						// Add neighbor locations if empty and unchecked.
+						for (int rN = -1; rN <= 1; rN++) {
 							// Check for border.
-							if (l[1] + cN < 0 || l[1] + cN >= getColumnCount())
+							if (l[0] + rN < 0 || l[0] + rN >= getRowCount())
 								continue;
-							// Don't re-check.
-							if (checked[l[0] + rN][l[1] + cN])
-								continue;
-							// Add location to check list if empty or queen.
-							if (board[l[0] + rN][l[1] + cN] == E || board[l[0] + rN][l[1] + cN] == B
-									|| board[l[0] + rN][l[1] + cN] == W) {
-								check.add(new int[] { l[0] + rN, l[1] + cN });
+							for (int cN = -1; cN <= 1; cN++) {
+								// Check for border.
+								if (l[1] + cN < 0 || l[1] + cN >= getColumnCount())
+									continue;
+								// Get board value at current check location.
+								byte currValue = board[l[0] + rN][l[1] + cN];
+								// Add current location to check list if empty
+								// or queen, and unchecked.
+								if ((currValue == E || currValue == B || currValue == W)
+										&& !checked[l[0] + rN][l[1] + cN]) {
+									check.add(new int[] { l[0] + rN, l[1] + cN });
+									// Mark location as checked.
+									checked[l[0] + rN][l[1] + cN] = true;
+								}
 							}
 						}
 					}
 				}
+
 				// Add chamber info to array.
-				for (int f = 0; f < found.size(); f++)
-					chambers[found.get(f)[0]][found.get(f)[1]] = owner;
+				for (int f = 0; f < found.size(); f++) {
+					int r = found.get(f)[0];
+					int c = found.get(f)[1];
+					// Chamber labels.
+					chambers[0][r][c] = label;
+					// Black queen count.
+					chambers[1][r][c] = bCount;
+					// White queen count.
+					chambers[2][r][c] = wCount;
+				}
+				label++;
 			}
 		}
 		// Return board chamber representation array.

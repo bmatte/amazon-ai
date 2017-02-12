@@ -129,7 +129,19 @@ public class BoardWindow implements BoardView {
 				g.drawLine(cP + 0, cP + width, cP + width, cP + width);
 
 				// Get chambers.
-				byte[][] chambers = boardModel.findChambers();
+				byte[][][] chambers = boardModel.findChambers();
+				// Max label found.
+				int max = 0;
+				for (int i = 0; i < chambers[0].length; i++)
+					for (int j = 0; j < chambers[0][i].length; j++)
+						max = Math.max(max, chambers[0][i][j]);
+				// Different chamber label colors.
+				Color[] chamberColors = new Color[max + 1];
+				for (int i = 0; i < max + 1; i++)
+					chamberColors[i] = Color.getHSBColor((float) Math.random(), (float) Math.random(),
+							0.25f * (float) Math.random() + 0.25f);
+				// chamberColors[i] = Color.getHSBColor((float) i / (max+1),
+				// 1.0f, 0.5f);
 
 				// For each row.
 				for (int i = 0; i < boardModel.getRowCount(); i++) {
@@ -211,22 +223,12 @@ public class BoardWindow implements BoardView {
 							drawArrow(gg, gc(w, d), gc(w, l), gc(w, d), x, y, tW);
 						}
 
-						// XXX Draw grid of found chambers beside game board for
-						// debugging.
-						switch (chambers[i][j]) {
-						case (BoardModel.B):
-							g.setColor(gc(b, p));
-							break;
-						case (BoardModel.W):
-							g.setColor(gc(w, m));
-							break;
-						case (BoardModel.E):
-							g.setColor(gc(n, m));
-							break;
-						case (-1):
-							g.setColor(gc(n, d));
-						}
+						// XXX Draw chambers for debugging.
+						g.setColor(chamberColors[chambers[0][i][j]]);
 						g.fillRect(x + width + cP, y, tW, tW);
+						g.setColor(new Color(255, 255, 255));
+						g.drawString(Integer.toString((int) chambers[1][i][j]), x + width + cP, y + cP);
+						g.drawString(Integer.toString((int) chambers[2][i][j]), x + width + cP, y + cP + tW / 2);
 					}
 				}
 			}

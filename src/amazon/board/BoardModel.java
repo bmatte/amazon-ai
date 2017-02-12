@@ -81,12 +81,13 @@ public interface BoardModel {
 	byte[][] getState();
 
 	/**
-	 * Return a board array representing the player ownership of chambers. Each
-	 * player is represented by their queen label, ties are empty space, and
-	 * other locations are -1.
+	 * Return three board array representations for chamber ownership. First
+	 * array represents all found chambers with unique labels, while second and
+	 * third arrays represent the number of black and white queens contained in
+	 * each chamber.
 	 * 
 	 * @return Validity of piece move.
 	 */
-	public byte[][] findChambers();
+	public byte[][][] findChambers();
 
 }
