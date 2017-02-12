@@ -89,7 +89,7 @@ public interface BoardModel {
 	 * @return Validity of piece move.
 	 */
 	public byte[][][] getChambers();
-	
+
 	/**
 	 * Get the shared and unshared points for black and white players.
 	 * 

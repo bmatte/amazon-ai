@@ -323,6 +323,9 @@ public class BoardArray implements BoardModel {
 	 */
 	@Override
 	public boolean move(int rQI, int cQI, int rQF, int cQF, int rA, int cA) {
+		// XXX Print error message if queen in owned chamber is moved.
+		if (getChambers()[1][rQI][cQI] > 0 && getChambers()[2][rQI][cQI] > 0)
+			System.err.println("Queen within owned chamber being moved!");
 		// Check if move is invalid.
 		if (!validTurn(rQI, cQI, rQF, cQF, rA, cA))
 			return false;
