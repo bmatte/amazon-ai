@@ -55,8 +55,8 @@ public class Game {
 			});
 		}
 		if (user.length() > 0)
-			client = new SmartFoxClient(user, pass, this, null);// TODO point to
-																// lobby here.
+			// TODO point to lobby object here.
+			client = new SmartFoxClient(user, pass, this, null);
 	}
 
 	/**
@@ -70,7 +70,7 @@ public class Game {
 	}
 
 	/**
-	 * Create a new offline game, showing ASCII view.
+	 * Create a new offline game, using ASCII view.
 	 */
 	public Game() {
 		this(1, "", "");
@@ -115,6 +115,8 @@ public class Game {
 
 	/**
 	 * Get the game's board model.
+	 * 
+	 * @return This games's board model.
 	 */
 	public BoardModel getBoard() {
 		return board;
