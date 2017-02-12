@@ -55,9 +55,10 @@ public class BoardArray implements BoardModel {
 		board[3][0] = W;
 		board[3][9] = W;
 
-		// Arrow testing.
-		for (int i = 0; i < 80; i++)
-			board[(int) (Math.random() * 10)][(int) (Math.random() * 10)] = (Math.random() > 0.5 ? AB : AW);
+		// // XXX Arrow testing.
+		// for (int i = 0; i < 80; i++)
+		// board[(int) (Math.random() * 10)][(int) (Math.random() * 10)] =
+		// (Math.random() > 0.5 ? AB : AW);
 
 		// White goes first.
 		whiteTurn = true;
