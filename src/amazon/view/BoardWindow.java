@@ -92,7 +92,7 @@ public class BoardWindow implements BoardView {
 	 */
 	private void initialize() {
 		frame = new JFrame();
-		frame.setSize(320, 320);
+		frame.setSize(640, 480);
 		frame.setTitle("Game of Amazons");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		panel = new JPanel() {
@@ -115,8 +115,8 @@ public class BoardWindow implements BoardView {
 				int cP = 10;
 
 				// Find square dimensions of board.
-				int width = (int) Math.min(g.getClipBounds().getWidth() - cP * 2,
-						g.getClipBounds().getHeight() - cP * 2);
+				int width = (int) Math.min(g.getClipBounds().getWidth() / 2 - cP * 2,
+						g.getClipBounds().getHeight() * 2 / 3 - cP * 2);
 				// Tile width.
 				int tW = (width - 1) / boardModel.getRowCount();
 				width = 1 + tW * boardModel.getRowCount();
@@ -129,7 +129,7 @@ public class BoardWindow implements BoardView {
 				g.drawLine(cP + 0, cP + width, cP + width, cP + width);
 
 				// Get chambers.
-				byte[][][] chambers = boardModel.findChambers();
+				byte[][][] chambers = boardModel.getChambers();
 				// Max label found.
 				int max = 0;
 				for (int i = 0; i < chambers[0].length; i++)
@@ -231,6 +231,12 @@ public class BoardWindow implements BoardView {
 						g.drawString(Integer.toString((int) chambers[2][i][j]), x + width + cP, y + cP + tW / 2);
 					}
 				}
+				// XXX Draw points for debugging.
+				g.setColor(new Color(0, 0, 0));
+				g.drawString(
+						"B:" + boardModel.getPoints()[0][0] + "(" + boardModel.getPoints()[1][0] + ") W:"
+								+ boardModel.getPoints()[0][1] + "(" + boardModel.getPoints()[1][1] + ")",
+						cP, width + cP * 3);
 			}
 		};
 		panel.addComponentListener(new ComponentAdapter() {

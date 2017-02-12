@@ -14,6 +14,8 @@ public class BoardArray implements BoardModel {
 	private byte[][] board;
 	// White or black turn.
 	private boolean whiteTurn;
+	// Chambers representation. Will be null when un-calculated.
+	private byte[][][] chambers;
 
 	// /**
 	// * Representation of Amazon board.
@@ -71,7 +73,10 @@ public class BoardArray implements BoardModel {
 	 * 
 	 * @see amazon.board.BoardModel#findChambers()
 	 */
-	public byte[][][] findChambers() {
+	public byte[][][] getChambers() {
+		// Don't recalculate if not needed.
+		if (chambers != null)
+			return chambers;
 		// Initialize chamber labels and count as 0.
 		byte[][][] chambers = new byte[3][getRowCount()][getColumnCount()];
 		// TODO Possibly make chamber queen counts initialized at -1 for
@@ -151,71 +156,10 @@ public class BoardArray implements BoardModel {
 				label++;
 			}
 		}
+		// Save recalculated chambers.
+		this.chambers = chambers;
 		// Return board chamber representation array.
 		return chambers;
-	}
-
-	/**
-	 * Count the chamber size of a given queen. Returns negative count if other
-	 * player's queen found in chamber.
-	 * 
-	 * @param rQ
-	 *            Queen row index.
-	 * @param cQ
-	 *            Queen column index.
-	 * @return Validity of piece move.
-	 */
-	public int queenChamber(int rQ, int cQ) {
-		if (board[rQ][cQ] != B && board[rQ][cQ] != W)
-			throw new IllegalArgumentException("Queen not at location!");
-		// Get other player queen.
-		byte otherQueen = board[rQ][cQ] == B ? W : B;
-		// Checked board locations.
-		boolean[][] checked = new boolean[getRowCount()][getColumnCount()];
-		// List of locations to check.
-		ArrayList<int[]> check = new ArrayList<>();
-		// Size of chamber.
-		int size = 0;
-		// Only player queen in chamber.
-		boolean alone = true;
-		// Start at queen location.
-		check.add(new int[] { rQ, cQ });
-		// Check location and spread out if empty.
-		while (check.size() > 0) {
-			// Get location to check.
-			int r = check.get(0)[0];
-			int c = check.get(0)[1];
-			// Get board value at check location.
-			byte value = board[r][c];
-			// Check if empty or queen.
-			if (value == E || value == B || value == W) {
-				size++;
-				// Mark as not alone if other player queen is found.
-				if (value == otherQueen)
-					alone = false;
-			}
-			// Mark location as checked.
-			checked[r][c] = true;
-			// Add neighbor locations if empty and unchecked.
-			for (int i = -1; i <= 1; i++) {
-				// Check for border.
-				if (r + i < 0 || r + i >= getRowCount())
-					continue;
-				for (int j = -1; j <= 1; j++) {
-					// Check for border.
-					if (c + j < 0 || c + i >= getColumnCount())
-						continue;
-					// Add location to check list if unchecked and empty.
-					if (!checked[r + i][c + j] && board[r + i][c + j] == E) {
-						check.add(new int[] { r + i, c + j });
-					}
-				}
-			}
-			// Remove checked location from list.
-			check.remove(0);
-		}
-		// Return size, negative if not alone.
-		return size * (alone ? 1 : -1);
 	}
 
 	/**
@@ -324,6 +268,48 @@ public class BoardArray implements BoardModel {
 		return false;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see amazon.board.BoardModel#getPoints()
+	 */
+	public int[][] getPoints() {
+		// Calculate chambers if needed.
+		byte[][][] chambers = getChambers();
+		// Shared and unshared points, for black and white.
+		int[][] points = new int[2][2];
+		for (int i = 0; i < getRowCount(); i++)
+			for (int j = 0; j < getColumnCount(); j++) {
+				if (chambers[1][i][j] > 0) {
+					points[0][0]++;
+					if (chambers[2][i][j] <= 0)
+						points[1][0]++;
+				}
+				if (chambers[2][i][j] > 0) {
+					points[0][1]++;
+					if (chambers[1][i][j] <= 0)
+						points[1][1]++;
+				}
+			}
+		return points;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see amazon.board.BoardModel#checkFinished()
+	 */
+	public boolean checkFinished() {
+		// Calculate chambers if needed.
+		byte[][][] chambers = getChambers();
+		// Check if any chamber is occupied by both players.
+		for (int i = 0; i < getRowCount(); i++)
+			for (int j = 0; j < getColumnCount(); j++)
+				if (chambers[1][i][j] > 0 && chambers[2][i][j] > 0)
+					return false;
+		return true;
+	}
+
 	@Override
 	public boolean validTurn(int rQI, int cQI, int rQF, int cQF, int rA, int cA) {
 		return validQueen(rQI, cQI, rQF, cQF) && validArrow(rQI, cQI, rQF, cQF, rA, cA);
@@ -345,6 +331,8 @@ public class BoardArray implements BoardModel {
 		board[rQI][cQI] = E;
 		// Place arrow.
 		board[rA][cA] = E;
+		// Make chamber representation un-calculated after move.
+		chambers = null;
 		// Succeeded.
 		return true;
 	}

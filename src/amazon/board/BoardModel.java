@@ -88,6 +88,21 @@ public interface BoardModel {
 	 * 
 	 * @return Validity of piece move.
 	 */
-	public byte[][][] findChambers();
+	public byte[][][] getChambers();
+	
+	/**
+	 * Get the shared and unshared points for black and white players.
+	 * 
+	 * @return Shared and unshared points, for black and white.
+	 */
+	public int[][] getPoints();
 
+	/**
+	 * Check if the game is finished, i.e. there's no chambers occupied by both
+	 * players.
+	 * 
+	 * @return Whether the game is finished, i.e. there's no chambers occupied
+	 *         by both players.
+	 */
+	public boolean checkFinished();
 }
