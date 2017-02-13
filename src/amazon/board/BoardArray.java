@@ -43,6 +43,15 @@ public class BoardArray implements BoardModel {
 	 * Representation of Amazon board.
 	 */
 	public BoardArray() {
+		reinitialize();
+	};
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see amazon.board.BoardModel#reinitialize()
+	 */
+	public void reinitialize() {
 		// Create new empty board array.
 		board = new byte[10][10];
 		// Add initiaL queens.
@@ -62,7 +71,9 @@ public class BoardArray implements BoardModel {
 
 		// White goes first.
 		whiteTurn = true;
-	};
+		// Un-calculated chamber representations.
+		chambers = null;
+	}
 
 	private BoardArray(byte[][] board, boolean whiteTurn) {
 		this.board = board;
@@ -324,19 +335,22 @@ public class BoardArray implements BoardModel {
 	@Override
 	public boolean move(int rQI, int cQI, int rQF, int cQF, int rA, int cA) {
 		// XXX Print error message if queen in owned chamber is moved.
-		if (getChambers()[1][rQI][cQI] > 0 && getChambers()[2][rQI][cQI] > 0)
+		if ((getChambers()[1][rQI][cQI] == 0 && getChambers()[2][rQI][cQI] > 0)
+				|| (getChambers()[1][rQI][cQI] > 0 && getChambers()[2][rQI][cQI] == 0))
 			System.err.println("Queen within owned chamber being moved!");
 		// Check if move is invalid.
-		if (!validTurn(rQI, cQI, rQF, cQF, rA, cA))
-			return false;
+		// if (!validTurn(rQI, cQI, rQF, cQF, rA, cA))
+		// return false;
 		// Move whatever queen to new location.
 		board[rQF][cQF] = board[rQI][cQI];
 		// Make initial location empty.
 		board[rQI][cQI] = E;
 		// Place arrow.
-		board[rA][cA] = E;
+		board[rA][cA] = whiteTurn ? AW : AB;
 		// Make chamber representation un-calculated after move.
 		chambers = null;
+		// Change player turn;
+		whiteTurn = !whiteTurn;
 		// Succeeded.
 		return true;
 	}
@@ -349,7 +363,66 @@ public class BoardArray implements BoardModel {
 	@Override
 	public ArrayList<int[]> possibleMoves() {
 		ArrayList<int[]> moves = new ArrayList<>();
+		// Location of each queen.
+		int[][] queens = getQueens(whiteTurn);
+		// For each queen.
+		for (int q = 0; q < 4; q++) {
+			// Initial queen position.
+			int rQI = queens[q][0];
+			int cQI = queens[q][1];
+			// Move on to next queen if in its own chamber.
+			if ((getChambers()[1][rQI][cQI] == 0 && getChambers()[2][rQI][cQI] > 0)
+					|| (getChambers()[1][rQI][cQI] > 0 && getChambers()[2][rQI][cQI] == 0))
+				continue;
+			// Row direction.
+			for (int rD = -1; rD <= 1; rD++) {
+				// Column direction.
+				for (int cD = -1; cD <= 1; cD++) {
+					// Continue if no direction.
+					if (rD == 0 && cD == 0)
+						continue;
+					// Check all possible distances.
+					for (int dist = 1; dist < Math.max(getRowCount(), getColumnCount()); dist++) {
+						// Calculate final queen position.
+						int rQF = rQI + rD * dist;
+						int cQF = cQI + cD * dist;
+						// Check if move is off board.
+						if (rQF < 0 || rQF >= getRowCount() || cQF < 0 || cQF >= getColumnCount())
+							break;
+						// Check if move is not empty.
+						if (board[rQF][cQF] != E)
+							break;
+						// Arrow row direction.
+						for (int rAD = -1; rAD <= 1; rAD++) {
+							// Arrow column direction.
+							for (int cAD = -1; cAD <= 1; cAD++) {
+								// Continue if no direction.
+								if (rAD == 0 && cAD == 0)
+									continue;
 
+								// Check all possible arrow distances.
+								for (int aDist = 1; aDist < Math.max(getRowCount(), getColumnCount()); aDist++) {
+									// Calculate arrow position.
+									int rA = rQF + rAD * aDist;
+									int cA = cQF + cAD * aDist;
+									// Check if arrow move is off board.
+									if (rA < 0 || rA >= getRowCount() || cA < 0 || cA >= getColumnCount())
+										break;
+									// Check if arrow move is not empty, or
+									// initial position.
+									if (board[rA][cA] != E && (rA != rQI || cA != cQI))
+										break;
+									// Add move to list.
+									int[] move = { rQI, cQI, rQF, cQF, rA, cA };
+									moves.add(move);
+								}
+							}
+						}
+
+					}
+				}
+			}
+		}
 		return moves;
 	}
 
@@ -407,6 +480,30 @@ public class BoardArray implements BoardModel {
 		for (int i = 0; i < board.length; i++)
 			state[i] = board[i].clone();
 		return state;
+	}
+
+	/**
+	 * Get the locations of a given players queens.
+	 * 
+	 * @param white
+	 *            Find white or black queens.
+	 * @return The location of each queen; first index queen, second index row
+	 *         or column.
+	 */
+	public int[][] getQueens(boolean white) {
+		// Location of each queen.
+		int[][] queenLoc = new int[4][2];
+		// Current queen index.
+		int index = 0;
+		// Find current player's queen locations.
+		for (int i = 0; i < getRowCount(); i++)
+			for (int j = 0; j < getColumnCount(); j++)
+				if (board[i][j] == (white ? W : B)) {
+					queenLoc[index][0] = i;
+					queenLoc[index][1] = j;
+					index++;
+				}
+		return queenLoc;
 	}
 
 	/** Create a clone of this board. */

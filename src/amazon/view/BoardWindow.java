@@ -116,11 +116,15 @@ public class BoardWindow implements BoardView {
 
 				// Find square dimensions of board.
 				int width = (int) Math.min(g.getClipBounds().getWidth() / 2 - cP * 2,
-						g.getClipBounds().getHeight() * 2 / 3 - cP * 2);
+						g.getClipBounds().getHeight() * 10 /11 - cP * 2);
 				// Tile width.
 				int tW = (width - 1) / boardModel.getRowCount();
 				width = 1 + tW * boardModel.getRowCount();
 
+				//Draw background.
+				g.setColor(gc(n, d));
+				g.fillRect(0, 0, frame.getWidth(), frame.getHeight());
+				
 				// Draw border lines.
 				g.setColor(gc(n, d));
 				g.drawLine(cP + 0, cP + 0, cP + 0, cP + width);
@@ -232,7 +236,7 @@ public class BoardWindow implements BoardView {
 					}
 				}
 				// XXX Draw points for debugging.
-				g.setColor(new Color(0, 0, 0));
+				g.setColor(new Color(255, 255, 255));
 				g.drawString(
 						"B:" + boardModel.getPoints()[0][0] + "(" + boardModel.getPoints()[1][0] + ") W:"
 								+ boardModel.getPoints()[0][1] + "(" + boardModel.getPoints()[1][1] + ")",

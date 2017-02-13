@@ -1,6 +1,9 @@
 package amazon;
 
 import java.awt.EventQueue;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 
 import amazon.board.BoardArray;
 import amazon.board.BoardModel;
@@ -57,6 +60,33 @@ public class Game {
 		if (user.length() > 0)
 			client = new SmartFoxClient(user, pass, this, null);// TODO point to
 																// lobby here.
+
+		// XXX Random move testing.
+		while (true) {
+			for (int i = 0; i < 1024; i++) {
+				ArrayList<int[]> possibleMoves = boardModel.possibleMoves();
+				if (possibleMoves.size() > 0) {
+					int[] m = possibleMoves.get((int) (possibleMoves.size() * Math.random()));
+					System.out.println(
+							"(" + possibleMoves.size() + ")" + boardModel.move(m[0], m[1], m[2], m[3], m[4], m[5]));
+					if (view != null)
+						view.repaint();
+					try {
+						TimeUnit.MILLISECONDS.sleep(10);
+					} catch (InterruptedException e) {
+					}
+					if (boardModel.checkFinished())
+						break;
+				}
+			}
+			try {
+				TimeUnit.MILLISECONDS.sleep(3000);
+			} catch (InterruptedException e) {
+			}
+			boardModel.reinitialize();
+			if (view != null)
+				view.repaint();
+		}
 	}
 
 	/**

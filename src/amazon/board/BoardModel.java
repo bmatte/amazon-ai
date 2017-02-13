@@ -19,6 +19,9 @@ public interface BoardModel {
 	// White arrow.
 	byte AW = 4;
 
+	/** Reinitialize blank board. */
+	public void reinitialize();
+
 	/**
 	 * Validate a given player turn, i.e. queen move and arrow.
 	 * 
@@ -58,6 +61,8 @@ public interface BoardModel {
 	boolean move(int rQI, int cQI, int rQF, int cQF, int rA, int cA);
 
 	/**
+	 * Generate a list of possible moves.
+	 * 
 	 * @return List of possible moves.
 	 */
 	ArrayList<int[]> possibleMoves();
