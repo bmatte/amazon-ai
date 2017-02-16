@@ -195,7 +195,7 @@ public class BoardArray implements BoardModel {
 		if (board[rQF][cQF] != E)
 			return false;
 		// Check queen move path.
-		if (!validMove(rQI, cQI, cQF, cQF))
+		if (!validMove(rQI, cQI, rQF, cQF, rQI, cQI))
 			return false;
 		return true;
 	}
@@ -223,7 +223,7 @@ public class BoardArray implements BoardModel {
 		if (board[rA][cA] != E && !(rA == rQI && cA == cQI))
 			return false;
 		// Check arrow move path.
-		if (!validMove(rQF, cQF, rA, cA))
+		if (!validMove(rQF, cQF, rA, cA, rQI, cQI))
 			return false;
 		return true;
 	}
@@ -240,41 +240,49 @@ public class BoardArray implements BoardModel {
 	 *            Final row index.
 	 * @param cQF
 	 *            Final column index.
+	 * @param rQN
+	 *            Row index to ignore (treat as empty).
+	 * @param cQN
+	 *            Column index to ignore (treat as empty).
 	 * @return Validity of piece move.
 	 */
-	public boolean validMove(int rI, int cI, int rF, int cF) {
+	public boolean validMove(int rI, int cI, int rF, int cF, int rN, int cN) {
 		// Check if vertical move.
 		if (cI == cF) {
 			// Up or down.
 			int d = rF < rI ? -1 : 1;
 			// Check locations between start and destination.
-			for (int r = 0; r < Math.abs(rF - rI) - 1; r++)
-				if (board[rI + d * r][cI] != E)
+			for (int i = 1; i < Math.abs(rF - rI); i++)
+				if (board[rI + d * i][cI] != E && !(rI + d * i == rN && cI == cN))
 					return false;
+			return true;
 			// Check if horizontal move.
 		} else if (rI == rF) {
 			// Left or right.
 			int d = cF < cI ? -1 : 1;
 			// Check locations between start and destination.
-			for (int c = 0; c < Math.abs(cF - cI) - 1; c++)
-				if (board[rI][cI + d * c] != E)
+			for (int i = 1; i < Math.abs(cF - cI); i++)
+				if (board[rI][cI + d * i] != E && !(rI == rN && cI + d * i == cN))
 					return false;
+			return true;
 			// Check if upward sloping diagonal move.
 		} else if (rF - rI == -(cF - cI)) {
 			// Left or right.
 			int d = cF < cI ? -1 : 1;
 			// Check locations between start and destination.
-			for (int c = 0; c < Math.abs(cF - cI) - 1; c++)
-				if (board[rI - d * c][cI + d * c] != E)
+			for (int i = 1; i < Math.abs(cF - cI); i++)
+				if (board[rI - d * i][cI + d * i] != E && !(rI - d * i == rN && cI + d * i == cN))
 					return false;
+			return true;
 			// Check if downward sloping diagonal move.
 		} else if (rF - rI == cF - cI) {
 			// Left or right.
 			int d = cF < cI ? -1 : 1;
 			// Check locations between start and destination.
-			for (int c = 0; c < Math.abs(cF - cI) - 1; c++)
-				if (board[rI + d * c][cI + d * c] != E)
+			for (int i = 1; i < Math.abs(cF - cI); i++)
+				if (board[rI + d * i][cI + d * i] != E && !(rI + d * i == rN && cI + d * i == cN))
 					return false;
+			return true;
 		}
 		// Move cannot be valid.
 		return false;
@@ -339,8 +347,8 @@ public class BoardArray implements BoardModel {
 				|| (getChambers()[1][rQI][cQI] > 0 && getChambers()[2][rQI][cQI] == 0))
 			System.err.println("Queen within owned chamber being moved!");
 		// Check if move is invalid.
-		// if (!validTurn(rQI, cQI, rQF, cQF, rA, cA))
-		// return false;
+		if (!validTurn(rQI, cQI, rQF, cQF, rA, cA))
+			return false;
 		// Move whatever queen to new location.
 		board[rQF][cQF] = board[rQI][cQI];
 		// Make initial location empty.
@@ -370,10 +378,13 @@ public class BoardArray implements BoardModel {
 			// Initial queen position.
 			int rQI = queens[q][0];
 			int cQI = queens[q][1];
-			// Move on to next queen if in its own chamber.
-			if ((getChambers()[1][rQI][cQI] == 0 && getChambers()[2][rQI][cQI] > 0)
-					|| (getChambers()[1][rQI][cQI] > 0 && getChambers()[2][rQI][cQI] == 0))
-				continue;
+			//// XXX Might not want for AI training.
+			// // Move on to next queen if in its own chamber.
+			// if ((getChambers()[1][rQI][cQI] == 0 &&
+			// getChambers()[2][rQI][cQI] > 0)
+			// || (getChambers()[1][rQI][cQI] > 0 && getChambers()[2][rQI][cQI]
+			// == 0))
+			// continue;
 			// Row direction.
 			for (int rD = -1; rD <= 1; rD++) {
 				// Column direction.

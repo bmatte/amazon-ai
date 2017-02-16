@@ -62,13 +62,18 @@ public class Game {
 																// lobby here.
 
 		// XXX Random move testing.
-		while (true) {
+		breakLabel:while (true) {
 			for (int i = 0; i < 1024; i++) {
 				ArrayList<int[]> possibleMoves = boardModel.possibleMoves();
 				if (possibleMoves.size() > 0) {
 					int[] m = possibleMoves.get((int) (possibleMoves.size() * Math.random()));
+					boolean move = boardModel.move(m[0], m[1], m[2], m[3], m[4], m[5]);
 					System.out.println(
-							"(" + possibleMoves.size() + ")" + boardModel.move(m[0], m[1], m[2], m[3], m[4], m[5]));
+							"(" + possibleMoves.size() + ")" + move);
+					if(!move){
+						System.out.println(m[0]+" "+ m[1]+" "+ m[2]+" "+ m[3]+" "+m[4]+" "+ m[5]);
+					break breakLabel;
+					}
 					if (view != null)
 						view.repaint();
 					try {
@@ -80,7 +85,7 @@ public class Game {
 				}
 			}
 			try {
-				TimeUnit.MILLISECONDS.sleep(3000);
+				TimeUnit.MILLISECONDS.sleep(1000);
 			} catch (InterruptedException e) {
 			}
 			boardModel.reinitialize();
