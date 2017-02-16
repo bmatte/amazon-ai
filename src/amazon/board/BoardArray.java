@@ -12,8 +12,8 @@ import java.util.Arrays;
 public class BoardArray implements BoardModel {
 	// Board representation.
 	private byte[][] board;
-	// White or black turn.
-	private boolean whiteTurn;
+	// Black or white turn.
+	private boolean blackTurn;
 	// Chambers representation. Will be null when un-calculated.
 	private byte[][][] chambers;
 
@@ -70,14 +70,14 @@ public class BoardArray implements BoardModel {
 		// (Math.random() > 0.5 ? AB : AW);
 
 		// White goes first.
-		whiteTurn = true;
+		blackTurn = false;
 		// Un-calculated chamber representations.
 		chambers = null;
 	}
 
-	private BoardArray(byte[][] board, boolean whiteTurn) {
+	private BoardArray(byte[][] board, boolean blackTurn) {
 		this.board = board;
-		this.whiteTurn = whiteTurn;
+		this.blackTurn = blackTurn;
 	}
 
 	/*
@@ -193,7 +193,7 @@ public class BoardArray implements BoardModel {
 	 */
 	private boolean validQueen(int rQI, int cQI, int rQF, int cQF) {
 		// Check if initial location isn't current player's queen.
-		if (board[rQI][cQI] != (whiteTurn ? W : B))
+		if (board[rQI][cQI] != (blackTurn ? B : W))
 			return false;
 		// Check if final location isn't empty.
 		if (board[rQF][cQF] != E)
@@ -346,10 +346,12 @@ public class BoardArray implements BoardModel {
 	 */
 	@Override
 	public boolean move(int rQI, int cQI, int rQF, int cQF, int rA, int cA) {
-		// XXX Print error message if queen in owned chamber is moved.
-		if ((getChambers()[1][rQI][cQI] == 0 && getChambers()[2][rQI][cQI] > 0)
-				|| (getChambers()[1][rQI][cQI] > 0 && getChambers()[2][rQI][cQI] == 0))
-			System.err.println("Queen within owned chamber being moved!");
+		//// XXX Print error message if queen in owned chamber is moved.
+		// if ((getChambers()[1][rQI][cQI] == 0 && getChambers()[2][rQI][cQI] >
+		//// 0)
+		// || (getChambers()[1][rQI][cQI] > 0 && getChambers()[2][rQI][cQI] ==
+		//// 0))
+		// System.err.println("Queen within owned chamber being moved!");
 		// Check if move is invalid.
 		if (!validTurn(rQI, cQI, rQF, cQF, rA, cA))
 			return false;
@@ -358,11 +360,11 @@ public class BoardArray implements BoardModel {
 		// Make initial location empty.
 		board[rQI][cQI] = E;
 		// Place arrow.
-		board[rA][cA] = whiteTurn ? AW : AB;
+		board[rA][cA] = blackTurn ? AB : AW;
 		// Make chamber representation un-calculated after move.
 		chambers = null;
 		// Change player turn;
-		whiteTurn = !whiteTurn;
+		blackTurn = !blackTurn;
 		// Succeeded.
 		return true;
 	}
@@ -376,19 +378,12 @@ public class BoardArray implements BoardModel {
 	public ArrayList<int[]> possibleMoves() {
 		ArrayList<int[]> moves = new ArrayList<>();
 		// Location of each queen.
-		int[][] queens = getQueens(whiteTurn);
+		int[][] queens = getQueens(blackTurn);
 		// For each queen.
 		for (int q = 0; q < 4; q++) {
 			// Initial queen position.
 			int rQI = queens[q][0];
 			int cQI = queens[q][1];
-			//// XXX Might not want for AI training.
-			// // Move on to next queen if in its own chamber.
-			// if ((getChambers()[1][rQI][cQI] == 0 &&
-			// getChambers()[2][rQI][cQI] > 0)
-			// || (getChambers()[1][rQI][cQI] > 0 && getChambers()[2][rQI][cQI]
-			// == 0))
-			// continue;
 			// Row direction.
 			for (int rD = -1; rD <= 1; rD++) {
 				// Column direction.
@@ -497,6 +492,15 @@ public class BoardArray implements BoardModel {
 		return state;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see amazon.board.BoardModel#getTurn()
+	 */
+	public boolean getTurn() {
+		return blackTurn;
+	}
+
 	/**
 	 * Get the locations of a given players queens.
 	 * 
@@ -505,7 +509,7 @@ public class BoardArray implements BoardModel {
 	 * @return The location of each queen; first index queen, second index row
 	 *         or column.
 	 */
-	public int[][] getQueens(boolean white) {
+	private int[][] getQueens(boolean black) {
 		// Location of each queen.
 		int[][] queenLoc = new int[4][2];
 		// Current queen index.
@@ -513,7 +517,7 @@ public class BoardArray implements BoardModel {
 		// Find current player's queen locations.
 		for (int i = 0; i < getRowCount(); i++)
 			for (int j = 0; j < getColumnCount(); j++)
-				if (board[i][j] == (white ? W : B)) {
+				if (board[i][j] == (black ? B : W)) {
 					queenLoc[index][0] = i;
 					queenLoc[index][1] = j;
 					index++;
@@ -523,7 +527,7 @@ public class BoardArray implements BoardModel {
 
 	/** Create a clone of this board. */
 	public BoardModel clone() {
-		return new BoardArray(getState(), whiteTurn);
+		return new BoardArray(getState(), blackTurn);
 	}
 
 	/** Test initial board layout. */

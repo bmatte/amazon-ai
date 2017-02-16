@@ -244,6 +244,18 @@ public class BoardWindow implements BoardView {
 						"B:" + boardModel.getPoints()[0][0] + "(" + boardModel.getPoints()[1][0] + ") W:"
 								+ boardModel.getPoints()[0][1] + "(" + boardModel.getPoints()[1][1] + ")",
 						cP, width + cP * 3);
+
+				// Draw point ratio slider.
+				double ratio = (double) boardModel.getPoints()[0][1]
+						/ (boardModel.getPoints()[0][0] + boardModel.getPoints()[0][1]);
+				int left = cP;
+				int right = width * 2 - cP;
+				int mid = (int) (left + (right - left) * 0.5);
+				int win = (int) (left + (right - left) * ratio);
+				drawQueen(gg, gc(b, p), gc(b, h), gc(b, p), left, cP * 4 + width, tW);
+				drawQueen(gg, gc(w, m), gc(w, l), gc(w, d), right, cP * 4 + width, tW);
+				drawQueen(gg, gc(n, p), gc(n, h), gc(n, p), mid, cP * 4 + width, tW);
+				drawQueen(gg, gc(n, m), gc(n, l), gc(n, d), win, cP * 4 + width, tW);
 			}
 		};
 		panel.addComponentListener(new ComponentAdapter() {

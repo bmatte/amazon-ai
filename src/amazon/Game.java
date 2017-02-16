@@ -68,8 +68,18 @@ public class Game {
 				ArrayList<int[]> possibleMoves = boardModel.possibleMoves();
 				if (possibleMoves.size() > 0) {
 					int[] m = possibleMoves.get((int) (possibleMoves.size() * Math.random()));
+
+					// if (!boardModel.getTurn())
+					// // Move on to next queen if in its own chamber.
+					// if ((boardModel.getChambers()[1][m[0]][m[1]] == 0
+					// && boardModel.getChambers()[2][m[0]][m[1]] > 0)
+					// || (boardModel.getChambers()[1][m[0]][m[1]] > 0
+					// && boardModel.getChambers()[2][m[0]][m[1]] == 0))
+					// continue;
+
 					boolean move = boardModel.move(m[0], m[1], m[2], m[3], m[4], m[5]);
-					System.out.println("(" + possibleMoves.size() + ")" + move);
+					// System.out.println("(" + possibleMoves.size() + ")" +
+					// move);
 					if (!move) {
 						System.out.println(m[0] + " " + m[1] + " " + m[2] + " " + m[3] + " " + m[4] + " " + m[5]);
 						break breakLabel;
@@ -84,8 +94,12 @@ public class Game {
 						break;
 				}
 			}
+
+			System.out.println(boardModel.getPoints()[0][0] + "," + boardModel.getPoints()[1][0] + ","
+					+ boardModel.getPoints()[0][1] + "," + boardModel.getPoints()[1][1]);
+
 			try {
-				TimeUnit.MILLISECONDS.sleep(5000);
+				TimeUnit.MILLISECONDS.sleep(500);
 			} catch (InterruptedException e) {
 			}
 			boardModel.reinitialize();

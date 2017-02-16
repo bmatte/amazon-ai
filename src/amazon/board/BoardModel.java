@@ -110,4 +110,11 @@ public interface BoardModel {
 	 *         by both players.
 	 */
 	public boolean checkFinished();
+
+	/**
+	 * Get the current player turn.
+	 * 
+	 * @return Whether its black player's turn.
+	 */
+	public boolean getTurn();
 }
