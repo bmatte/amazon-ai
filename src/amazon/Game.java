@@ -62,7 +62,8 @@ public class Game {
 																// lobby here.
 
 		// XXX Random move testing.
-		breakLabel:while (true) {
+		boolean simulate = true;
+		breakLabel:while (simulate) {
 			for (int i = 0; i < 1024; i++) {
 				ArrayList<int[]> possibleMoves = boardModel.possibleMoves();
 				if (possibleMoves.size() > 0) {
@@ -85,7 +86,7 @@ public class Game {
 				}
 			}
 			try {
-				TimeUnit.MILLISECONDS.sleep(1000);
+				TimeUnit.MILLISECONDS.sleep(5000);
 			} catch (InterruptedException e) {
 			}
 			boardModel.reinitialize();

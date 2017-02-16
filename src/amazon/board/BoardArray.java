@@ -187,7 +187,7 @@ public class BoardArray implements BoardModel {
 	 *            Final queen column index.
 	 * @return Validity of queen move.
 	 */
-	public boolean validQueen(int rQI, int cQI, int rQF, int cQF) {
+	private boolean validQueen(int rQI, int cQI, int rQF, int cQF) {
 		// Check if initial location isn't current player's queen.
 		if (board[rQI][cQI] != (whiteTurn ? W : B))
 			return false;
@@ -217,7 +217,7 @@ public class BoardArray implements BoardModel {
 	 *            Arrow column index.
 	 * @return Validity of arrow move.
 	 */
-	public boolean validArrow(int rQI, int cQI, int rQF, int cQF, int rA, int cA) {
+	private boolean validArrow(int rQI, int cQI, int rQF, int cQF, int rA, int cA) {
 		// Check if arrow location isn't empty, and allow initial queen
 		// location.
 		if (board[rA][cA] != E && !(rA == rQI && cA == cQI))
@@ -246,7 +246,7 @@ public class BoardArray implements BoardModel {
 	 *            Column index to ignore (treat as empty).
 	 * @return Validity of piece move.
 	 */
-	public boolean validMove(int rI, int cI, int rF, int cF, int rN, int cN) {
+	private boolean validMove(int rI, int cI, int rF, int cF, int rN, int cN) {
 		// Check if vertical move.
 		if (cI == cF) {
 			// Up or down.
