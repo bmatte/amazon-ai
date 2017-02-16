@@ -91,8 +91,11 @@ public class BoardArray implements BoardModel {
 			return chambers;
 		// Initialize chamber labels and count as 0.
 		byte[][][] chambers = new byte[3][getRowCount()][getColumnCount()];
-		// TODO Possibly make chamber queen counts initialized at -1 for
-		// non-chambers.
+		// Initialize chamber queen counts at -1 for non-chambers.
+		for (int i = 0; i < getRowCount(); i++)
+			for (int j = 0; j < getColumnCount(); j++)
+				for (int k = 1; k <= 2; k++)
+					chambers[k][i][j] = -1;
 		// Checked board locations.
 		boolean[][] checked = new boolean[getRowCount()][getColumnCount()];
 		// Chamber label, reserving 0 for non-chambers.
@@ -112,6 +115,7 @@ public class BoardArray implements BoardModel {
 				byte wCount = 0;
 				// Start at current scan location.
 				check.add(new int[] { i, j });
+				checked[i][j] = true;
 
 				// Check location and spread out if empty.
 				while (check.size() > 0) {

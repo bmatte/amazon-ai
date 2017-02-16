@@ -63,17 +63,16 @@ public class Game {
 
 		// XXX Random move testing.
 		boolean simulate = true;
-		breakLabel:while (simulate) {
+		breakLabel: while (simulate) {
 			for (int i = 0; i < 1024; i++) {
 				ArrayList<int[]> possibleMoves = boardModel.possibleMoves();
 				if (possibleMoves.size() > 0) {
 					int[] m = possibleMoves.get((int) (possibleMoves.size() * Math.random()));
 					boolean move = boardModel.move(m[0], m[1], m[2], m[3], m[4], m[5]);
-					System.out.println(
-							"(" + possibleMoves.size() + ")" + move);
-					if(!move){
-						System.out.println(m[0]+" "+ m[1]+" "+ m[2]+" "+ m[3]+" "+m[4]+" "+ m[5]);
-					break breakLabel;
+					System.out.println("(" + possibleMoves.size() + ")" + move);
+					if (!move) {
+						System.out.println(m[0] + " " + m[1] + " " + m[2] + " " + m[3] + " " + m[4] + " " + m[5]);
+						break breakLabel;
 					}
 					if (view != null)
 						view.repaint();
