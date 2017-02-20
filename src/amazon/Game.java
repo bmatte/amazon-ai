@@ -1,6 +1,9 @@
 package amazon;
 
 import java.awt.EventQueue;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 
 import amazon.board.BoardArray;
 import amazon.board.BoardModel;
@@ -55,8 +58,55 @@ public class Game {
 			});
 		}
 		if (user.length() > 0)
-			// TODO point to lobby object here.
-			client = new SmartFoxClient(user, pass, this, null);
+      
+		// TODO point to lobby object here.
+		client = new SmartFoxClient(user, pass, this, null);
+
+		// XXX Random move testing.
+		boolean simulate = true;
+		breakLabel: while (simulate) {
+			for (int i = 0; i < 1024; i++) {
+				ArrayList<int[]> possibleMoves = boardModel.possibleMoves();
+				if (possibleMoves.size() > 0) {
+					int[] m = possibleMoves.get((int) (possibleMoves.size() * Math.random()));
+
+					// if (!boardModel.getTurn())
+					// // Move on to next queen if in its own chamber.
+					// if ((boardModel.getChambers()[1][m[0]][m[1]] == 0
+					// && boardModel.getChambers()[2][m[0]][m[1]] > 0)
+					// || (boardModel.getChambers()[1][m[0]][m[1]] > 0
+					// && boardModel.getChambers()[2][m[0]][m[1]] == 0))
+					// continue;
+
+					boolean move = boardModel.move(m[0], m[1], m[2], m[3], m[4], m[5]);
+					// System.out.println("(" + possibleMoves.size() + ")" +
+					// move);
+					if (!move) {
+						System.out.println(m[0] + " " + m[1] + " " + m[2] + " " + m[3] + " " + m[4] + " " + m[5]);
+						break breakLabel;
+					}
+					if (view != null)
+						view.repaint();
+					try {
+						TimeUnit.MILLISECONDS.sleep(10);
+					} catch (InterruptedException e) {
+					}
+					if (boardModel.checkFinished())
+						break;
+				}
+			}
+
+			System.out.println(boardModel.getPoints()[0][0] + "," + boardModel.getPoints()[1][0] + ","
+					+ boardModel.getPoints()[0][1] + "," + boardModel.getPoints()[1][1]);
+
+			try {
+				TimeUnit.MILLISECONDS.sleep(500);
+			} catch (InterruptedException e) {
+			}
+			boardModel.reinitialize();
+			if (view != null)
+				view.repaint();
+		}
 	}
 
 	/**

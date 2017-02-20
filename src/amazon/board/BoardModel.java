@@ -3,7 +3,7 @@ package amazon.board;
 import java.util.ArrayList;
 
 /**
- * "Game of Amazons" board model, modeling board positions and checking for
+ * "Game of Amazons" board model, modeling board locations and checking for
  * valid moves.
  */
 public interface BoardModel {
@@ -19,8 +19,11 @@ public interface BoardModel {
 	// White arrow.
 	byte AW = 4;
 
+	/** Reinitialize blank board. */
+	public void reinitialize();
+
 	/**
-	 * Validate a given move.
+	 * Validate a given player turn, i.e. queen move and arrow.
 	 * 
 	 * @param rQI
 	 *            Initial queen row index.
@@ -34,9 +37,9 @@ public interface BoardModel {
 	 *            Arrow row index.
 	 * @param cA
 	 *            Arrow column index.
-	 * @return Validity of move positions.
+	 * @return Validity of move locations.
 	 */
-	boolean validMove(int rQI, int cQI, int rQF, int cQF, int rA, int cA);
+	boolean validTurn(int rQI, int cQI, int rQF, int cQF, int rA, int cA);
 
 	/**
 	 * Perform a move, after determining its validity.
@@ -58,16 +61,18 @@ public interface BoardModel {
 	boolean move(int rQI, int cQI, int rQF, int cQF, int rA, int cA);
 
 	/**
+	 * Generate a list of possible moves.
+	 * 
 	 * @return List of possible moves.
 	 */
 	ArrayList<int[]> possibleMoves();
 
 	/**
 	 * @param r
-	 *            Row of position.
+	 *            Row of location.
 	 * @param c
-	 *            Column of position.
-	 * @return The value of a given board position.
+	 *            Column of location.
+	 * @return The value of a given board location.
 	 */
 	int get(int r, int c);
 
@@ -80,4 +85,36 @@ public interface BoardModel {
 	/** Get the current state of the board. */
 	byte[][] getState();
 
+	/**
+	 * Return three board array representations for chamber ownership. First
+	 * array represents all found chambers with unique labels, while second and
+	 * third arrays represent the number of black and white queens contained in
+	 * each chamber.
+	 * 
+	 * @return Validity of piece move.
+	 */
+	public byte[][][] getChambers();
+
+	/**
+	 * Get the shared and unshared points for black and white players.
+	 * 
+	 * @return Shared and unshared points, for black and white.
+	 */
+	public int[][] getPoints();
+
+	/**
+	 * Check if the game is finished, i.e. there's no chambers occupied by both
+	 * players.
+	 * 
+	 * @return Whether the game is finished, i.e. there's no chambers occupied
+	 *         by both players.
+	 */
+	public boolean checkFinished();
+
+	/**
+	 * Get the current player turn.
+	 * 
+	 * @return Whether its black player's turn.
+	 */
+	public boolean getTurn();
 }

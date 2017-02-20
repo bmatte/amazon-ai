@@ -92,7 +92,7 @@ public class BoardWindow implements BoardView {
 	 */
 	private void initialize() {
 		frame = new JFrame();
-		frame.setSize(320, 320);
+		frame.setSize(640, 480);
 		frame.setTitle("Game of Amazons");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		panel = new JPanel() {
@@ -115,11 +115,15 @@ public class BoardWindow implements BoardView {
 				int cP = 10;
 
 				// Find square dimensions of board.
-				int width = (int) Math.min(g.getClipBounds().getWidth() - cP * 2,
-						g.getClipBounds().getHeight() - cP * 2);
+				int width = (int) Math.min(g.getClipBounds().getWidth() / 2 - cP * 2,
+						g.getClipBounds().getHeight() * 10 / 11 - cP * 2);
 				// Tile width.
 				int tW = (width - 1) / boardModel.getRowCount();
 				width = 1 + tW * boardModel.getRowCount();
+
+				// Draw background.
+				g.setColor(gc(n, d));
+				g.fillRect(0, 0, frame.getWidth(), frame.getHeight());
 
 				// Draw border lines.
 				g.setColor(gc(n, d));
@@ -127,6 +131,21 @@ public class BoardWindow implements BoardView {
 				g.drawLine(cP + 0, cP + 0, cP + width, cP + 0);
 				g.drawLine(cP + width, cP + 0, cP + width, cP + width);
 				g.drawLine(cP + 0, cP + width, cP + width, cP + width);
+
+				// Get chambers.
+				byte[][][] chambers = boardModel.getChambers();
+				// Max label found.
+				int max = 0;
+				for (int i = 0; i < chambers[0].length; i++)
+					for (int j = 0; j < chambers[0][i].length; j++)
+						max = Math.max(max, chambers[0][i][j]);
+				// Different chamber label colors.
+				Color[] chamberColors = new Color[max + 1];
+				for (int i = 0; i < max + 1; i++)
+					chamberColors[i] = Color.getHSBColor((float) Math.random(), (float) Math.random(),
+							0.25f * (float) Math.random() + 0.25f);
+				// chamberColors[i] = Color.getHSBColor((float) i / (max+1),
+				// 1.0f, 0.5f);
 
 				// For each row.
 				for (int i = 0; i < boardModel.getRowCount(); i++) {
@@ -137,6 +156,9 @@ public class BoardWindow implements BoardView {
 						// Draw board background.
 						g.setColor((i + j) % 2 == 0 ? gc(n, h) : gc(n, l));
 						g.fillRect(x, y, tW, tW);
+						// //XXX Label rows and columns.
+						// g.setColor((i + j) % 2 == 0 ? gc(n, l) : gc(n, h));
+						// g.drawString(i+""+j,x+tW/2-6,y+tW/2+4);
 
 						// // Draw background lines.
 						// g.setColor((i + j) % 2 == 0 ? gc(n, l) : gc(n, h));
@@ -208,8 +230,32 @@ public class BoardWindow implements BoardView {
 							drawArrow(gg, gc(w, d), gc(w, l), gc(w, d), x, y, tW);
 						}
 
+						// XXX Draw chambers for debugging.
+						g.setColor(chamberColors[chambers[0][i][j]]);
+						g.fillRect(x + width + cP, y, tW, tW);
+						g.setColor(new Color(255, 255, 255));
+						g.drawString(Integer.toString((int) chambers[1][i][j]), x + width + cP, y + cP);
+						g.drawString(Integer.toString((int) chambers[2][i][j]), x + width + cP, y + cP + tW / 2);
 					}
 				}
+				// XXX Draw points for debugging.
+				g.setColor(new Color(255, 255, 255));
+				g.drawString(
+						"B:" + boardModel.getPoints()[0][0] + "(" + boardModel.getPoints()[1][0] + ") W:"
+								+ boardModel.getPoints()[0][1] + "(" + boardModel.getPoints()[1][1] + ")",
+						cP, width + cP * 3);
+
+				// Draw point ratio slider.
+				double ratio = (double) boardModel.getPoints()[0][1]
+						/ (boardModel.getPoints()[0][0] + boardModel.getPoints()[0][1]);
+				int left = cP;
+				int right = width * 2 - cP;
+				int mid = (int) (left + (right - left) * 0.5);
+				int win = (int) (left + (right - left) * ratio);
+				drawQueen(gg, gc(b, p), gc(b, h), gc(b, p), left, cP * 4 + width, tW);
+				drawQueen(gg, gc(w, m), gc(w, l), gc(w, d), right, cP * 4 + width, tW);
+				drawQueen(gg, gc(n, p), gc(n, h), gc(n, p), mid, cP * 4 + width, tW);
+				drawQueen(gg, gc(n, m), gc(n, l), gc(n, d), win, cP * 4 + width, tW);
 			}
 		};
 		panel.addComponentListener(new ComponentAdapter() {
