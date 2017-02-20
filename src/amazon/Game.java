@@ -58,15 +58,8 @@ public class Game {
 			});
 		}
 		if (user.length() > 0)
-<<<<<<< HEAD
-<<<<<<< HEAD
-			client = new SmartFoxClient(user, pass, this, null);// TODO point to
-																// lobby here.
-=======
-      
-		// TODO point to lobby object here.
-		client = new SmartFoxClient(user, pass, this, null);
->>>>>>> refs/remotes/origin/master
+			// TODO point to lobby object here.
+			client = new SmartFoxClient(user, pass, this, null);
 
 		// XXX Random move testing.
 		boolean simulate = true;
@@ -94,7 +87,7 @@ public class Game {
 					if (view != null)
 						view.repaint();
 					try {
-						TimeUnit.MILLISECONDS.sleep(10);
+						TimeUnit.MILLISECONDS.sleep(100);
 					} catch (InterruptedException e) {
 					}
 					if (boardModel.checkFinished())
@@ -106,20 +99,13 @@ public class Game {
 					+ boardModel.getPoints()[0][1] + "," + boardModel.getPoints()[1][1]);
 
 			try {
-				TimeUnit.MILLISECONDS.sleep(500);
+				TimeUnit.MILLISECONDS.sleep(5000);
 			} catch (InterruptedException e) {
 			}
 			boardModel.reinitialize();
 			if (view != null)
 				view.repaint();
 		}
-<<<<<<< HEAD
-=======
-			// TODO point to lobby object here.
-			client = new SmartFoxClient(user, pass, this, null);
->>>>>>> refs/remotes/origin/master
-=======
->>>>>>> refs/remotes/origin/master
 	}
 
 	/**
