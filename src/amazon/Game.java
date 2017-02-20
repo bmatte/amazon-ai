@@ -59,8 +59,14 @@ public class Game {
 		}
 		if (user.length() > 0)
 <<<<<<< HEAD
+<<<<<<< HEAD
 			client = new SmartFoxClient(user, pass, this, null);// TODO point to
 																// lobby here.
+=======
+      
+		// TODO point to lobby object here.
+		client = new SmartFoxClient(user, pass, this, null);
+>>>>>>> refs/remotes/origin/master
 
 		// XXX Random move testing.
 		boolean simulate = true;
@@ -107,9 +113,12 @@ public class Game {
 			if (view != null)
 				view.repaint();
 		}
+<<<<<<< HEAD
 =======
 			// TODO point to lobby object here.
 			client = new SmartFoxClient(user, pass, this, null);
+>>>>>>> refs/remotes/origin/master
+=======
 >>>>>>> refs/remotes/origin/master
 	}
 
