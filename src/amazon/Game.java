@@ -9,6 +9,8 @@ import amazon.board.BoardArray;
 import amazon.board.BoardModel;
 import amazon.client.ServerClient;
 import amazon.client.SmartFoxClient;
+import amazon.client.SmartFoxLobby;
+import amazon.client.SmartFoxLobbyConsole;
 import amazon.view.BoardASCII;
 import amazon.view.BoardView;
 import amazon.view.BoardWindow;
@@ -19,11 +21,11 @@ import amazon.view.BoardWindow;
  */
 public class Game {
 	// Amazon board model.
-	BoardModel board;
+	private BoardModel board;
 	// Client for online play.
-	ServerClient client;
+	private ServerClient client;
 	// Board view.
-	BoardView view;
+	private BoardView view;
 
 	/**
 	 * Create a new game.
@@ -37,12 +39,12 @@ public class Game {
 	 */
 	public Game(int viewOption, String user, String pass) {
 		// Create new board model.
-		final BoardModel boardModel = new BoardArray(); 
+		board = new BoardArray();
 
 		// Check if view should be shown.
 		if (viewOption == 1) {
 			// Create board view.
-			view = new BoardASCII(boardModel);
+			view = new BoardASCII(board);
 			view.repaint();
 		} else if (viewOption == 2) {
 			// Create new window event.
@@ -50,22 +52,22 @@ public class Game {
 				public void run() {
 					try {
 						// Create board view.
-						view = new BoardWindow(boardModel, true, false, true); //error when BoardModel is not final
+						view = new BoardWindow(board, true, false, true);
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
 				}
 			});
 		}
-		if (user.length() > 0)
-			// TODO point to lobby object here.
-			client = new SmartFoxClient(user, pass, this, null);
+
+		if (user.length() > 0 && client instanceof SmartFoxClient)
+			client = new SmartFoxClient(user, pass, this, new SmartFoxLobbyConsole((SmartFoxClient) client));
 
 		// XXX Random move testing.
 		boolean simulate = true;
 		breakLabel: while (simulate) {
 			for (int i = 0; i < 1024; i++) {
-				ArrayList<int[]> possibleMoves = boardModel.possibleMoves();
+				ArrayList<int[]> possibleMoves = board.possibleMoves();
 				if (possibleMoves.size() > 0) {
 					int[] m = possibleMoves.get((int) (possibleMoves.size() * Math.random()));
 
@@ -77,7 +79,7 @@ public class Game {
 					// && boardModel.getChambers()[2][m[0]][m[1]] == 0))
 					// continue;
 
-					boolean move = boardModel.move(m[0], m[1], m[2], m[3], m[4], m[5]);
+					boolean move = board.move(m[0], m[1], m[2], m[3], m[4], m[5]);
 					// System.out.println("(" + possibleMoves.size() + ")" +
 					// move);
 					if (!move) {
@@ -90,19 +92,19 @@ public class Game {
 						TimeUnit.MILLISECONDS.sleep(100);
 					} catch (InterruptedException e) {
 					}
-					if (boardModel.checkFinished())
+					if (board.checkFinished())
 						break;
 				}
 			}
 
-			System.out.println(boardModel.getPoints()[0][0] + "," + boardModel.getPoints()[1][0] + ","
-					+ boardModel.getPoints()[0][1] + "," + boardModel.getPoints()[1][1]);
+			System.out.println(board.getPoints()[0][0] + "," + board.getPoints()[1][0] + "," + board.getPoints()[0][1]
+					+ "," + board.getPoints()[1][1]);
 
 			try {
 				TimeUnit.MILLISECONDS.sleep(5000);
 			} catch (InterruptedException e) {
 			}
-			boardModel.reinitialize();
+			board.reinitialize();
 			if (view != null)
 				view.repaint();
 		}
