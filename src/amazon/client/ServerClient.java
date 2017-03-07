@@ -39,4 +39,11 @@ public interface ServerClient {
 	 *            Arrow column index.
 	 */
 	public void receiveMove(int rQI, int cQI, int rQF, int cQF, int rA, int cA);
+
+	/**
+	 * Check whether current player is black or white.
+	 * 
+	 * @return Whether player is black.
+	 */
+	public Boolean isBlackPlayer();
 }
