@@ -11,4 +11,10 @@ public interface SmartFoxLobby {
 	 * names.
 	 */
 	public void receiveGameList(ArrayList<String> list);
+	
+	/**
+	 * Set the client 
+	 * @param client Client to set.
+	 */
+	public void setClient(SmartFoxClient client);
 }

@@ -60,11 +60,45 @@ public class Game {
 			});
 		}
 
-		if (user.length() > 0 && client instanceof SmartFoxClient)
-			client = new SmartFoxClient(user, pass, this, new SmartFoxLobbyConsole((SmartFoxClient) client));
+		// Whether in a room.
+		boolean inRoom = false;
+		if (user.length() > 0) {
+			SmartFoxLobby lobby = new SmartFoxLobbyConsole();
+			client = new SmartFoxClient(user, pass, this, lobby);
+		}
+
+		while (client.isBlackPlayer() == null) {
+			try {
+				TimeUnit.MILLISECONDS.sleep(10);
+			} catch (InterruptedException e) {
+			}
+		}
+
+		for (int i = 0; i < 1024; i++) {
+			while (board.getTurn() != client.isBlackPlayer()) {
+				try {
+					TimeUnit.MILLISECONDS.sleep(10);
+				} catch (InterruptedException e) {
+				}
+			}
+			ArrayList<int[]> possibleMoves = board.possibleMoves();
+			if (possibleMoves.size() > 0) {
+				int[] m = possibleMoves.get((int) (possibleMoves.size() * Math.random()));
+				boolean moveM = move(true, m[0], m[1], m[2], m[3], m[4], m[5]);
+				// moveM = move(true,m[0], m[1], m[2], m[3], m[4], m[5]);
+				if (!moveM)
+					System.err.println(m[0] + " " + m[1] + " " + m[2] + " " + m[3] + " " + m[4] + " " + m[5]);
+				if (view != null)
+					view.repaint();
+				try {
+					TimeUnit.MILLISECONDS.sleep(10);
+				} catch (InterruptedException e) {
+				}
+			}
+		}
 
 		// XXX Random move testing.
-		boolean simulate = true;
+		boolean simulate = false;
 		breakLabel: while (simulate) {
 			for (int i = 0; i < 1024; i++) {
 				ArrayList<int[]> possibleMoves = board.possibleMoves();
@@ -80,10 +114,8 @@ public class Game {
 					// continue;
 
 					boolean move = board.move(m[0], m[1], m[2], m[3], m[4], m[5]);
-					// System.out.println("(" + possibleMoves.size() + ")" +
-					// move);
 					if (!move) {
-						System.out.println(m[0] + " " + m[1] + " " + m[2] + " " + m[3] + " " + m[4] + " " + m[5]);
+						System.err.println(m[0] + " " + m[1] + " " + m[2] + " " + m[3] + " " + m[4] + " " + m[5]);
 						break breakLabel;
 					}
 					if (view != null)
@@ -96,9 +128,6 @@ public class Game {
 						break;
 				}
 			}
-
-			System.out.println(board.getPoints()[0][0] + "," + board.getPoints()[1][0] + "," + board.getPoints()[0][1]
-					+ "," + board.getPoints()[1][1]);
 
 			try {
 				TimeUnit.MILLISECONDS.sleep(500);
@@ -175,6 +204,10 @@ public class Game {
 
 	/** Create and run the game. */
 	public static void main(String[] args) {
-		Game g = new Game(2, "group5", "group5");
+		Game g;
+		if (args.length == 1)
+			g = new Game(2, args[0], args[0]);
+		else
+			g = new Game(2, "group5", "group5");
 	}
 }
