@@ -67,76 +67,62 @@ public class Game {
 			client = new SmartFoxClient(user, pass, this, lobby);
 		}
 
+		// Wait until client assigns a player color.
 		while (client.isBlackPlayer() == null) {
 			try {
-				TimeUnit.MILLISECONDS.sleep(10);
+				TimeUnit.MILLISECONDS.sleep(100);
 			} catch (InterruptedException e) {
 			}
 		}
 
-		for (int i = 0; i < 1024; i++) {
-			while (board.getTurn() != client.isBlackPlayer()) {
-				try {
-					TimeUnit.MILLISECONDS.sleep(10);
-				} catch (InterruptedException e) {
-				}
-			}
-			ArrayList<int[]> possibleMoves = board.possibleMoves();
-			if (possibleMoves.size() > 0) {
-				int[] m = possibleMoves.get((int) (possibleMoves.size() * Math.random()));
-				boolean moveM = move(true, m[0], m[1], m[2], m[3], m[4], m[5]);
-				// moveM = move(true,m[0], m[1], m[2], m[3], m[4], m[5]);
-				if (!moveM)
-					System.err.println(m[0] + " " + m[1] + " " + m[2] + " " + m[3] + " " + m[4] + " " + m[5]);
-				if (view != null)
-					view.repaint();
-				try {
-					TimeUnit.MILLISECONDS.sleep(10);
-				} catch (InterruptedException e) {
-				}
-			}
-		}
-
-		// XXX Random move testing.
+		// XXX Simulate games.
 		boolean simulate = false;
-		breakLabel: while (simulate) {
-			for (int i = 0; i < 1024; i++) {
+
+		// Play one game, and repeat if set to simulate.
+		do {
+			// Max possible number of moves is 92.
+			for (int i = 0; i < 92; i++) {
+				// Wait while it's the other player's turn.
+				while (board.getTurn() != client.isBlackPlayer()) {
+					try {
+						TimeUnit.MILLISECONDS.sleep(100);
+					} catch (InterruptedException e) {
+					}
+				}
+				// Get list of possible moves.
 				ArrayList<int[]> possibleMoves = board.possibleMoves();
 				if (possibleMoves.size() > 0) {
 					int[] m = possibleMoves.get((int) (possibleMoves.size() * Math.random()));
-
-					// if (!boardModel.getTurn())
-					// // Move on to next queen if in its own chamber.
-					// if ((boardModel.getChambers()[1][m[0]][m[1]] == 0
-					// && boardModel.getChambers()[2][m[0]][m[1]] > 0)
-					// || (boardModel.getChambers()[1][m[0]][m[1]] > 0
-					// && boardModel.getChambers()[2][m[0]][m[1]] == 0))
-					// continue;
-
-					boolean move = board.move(m[0], m[1], m[2], m[3], m[4], m[5]);
-					if (!move) {
-						System.err.println(m[0] + " " + m[1] + " " + m[2] + " " + m[3] + " " + m[4] + " " + m[5]);
-						break breakLabel;
-					}
+					boolean moveM = move(true, m[0], m[1], m[2], m[3], m[4], m[5]);
+					// Print move information if move was invalid.
+					if (!moveM)
+						System.err.println(
+								"{" + m[0] + "," + m[1] + "," + m[2] + "," + m[3] + "," + m[4] + "," + m[5] + "}");
+					// Repaint if a view exists.
 					if (view != null)
 						view.repaint();
+					// Stop if game is finished.
+					if (board.checkFinished())
+						break;
+					// XXX Wait, for testing.
 					try {
 						TimeUnit.MILLISECONDS.sleep(10);
 					} catch (InterruptedException e) {
 					}
-					if (board.checkFinished())
-						break;
 				}
 			}
 
-			try {
-				TimeUnit.MILLISECONDS.sleep(500);
-			} catch (InterruptedException e) {
+			if (simulate) {
+				// Wait at end of game simulation.
+				try {
+					TimeUnit.MILLISECONDS.sleep(500);
+				} catch (InterruptedException e) {
+				}
+				board.reinitialize();
+				if (view != null)
+					view.repaint();
 			}
-			board.reinitialize();
-			if (view != null)
-				view.repaint();
-		}
+		} while (simulate);
 	}
 
 	/**
@@ -204,7 +190,7 @@ public class Game {
 
 	/** Create and run the game. */
 	public static void main(String[] args) {
-		Game g;
+		Game g = null;
 		if (args.length == 1)
 			g = new Game(2, args[0], args[0]);
 		else

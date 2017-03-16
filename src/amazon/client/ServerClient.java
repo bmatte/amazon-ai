@@ -41,7 +41,8 @@ public interface ServerClient {
 	public void receiveMove(int rQI, int cQI, int rQF, int cQF, int rA, int cA);
 
 	/**
-	 * Check whether current player is black or white.
+	 * Check whether current player is black or white. Will be null if client
+	 * has not assigned a player.
 	 * 
 	 * @return Whether player is black.
 	 */
