@@ -16,6 +16,8 @@ public class BoardArray implements BoardModel {
 	private boolean blackTurn;
 	// Chambers representation. Will be null when un-calculated.
 	private byte[][][] chambers;
+	// Time of current turn start.
+	private long turnTime;
 
 	// /**
 	// * Representation of Amazon board.
@@ -71,6 +73,8 @@ public class BoardArray implements BoardModel {
 
 		// White goes first.
 		blackTurn = false;
+		// Reset turn time.
+		turnTime = System.currentTimeMillis();
 		// Un-calculated chamber representations.
 		chambers = null;
 	}
@@ -78,6 +82,8 @@ public class BoardArray implements BoardModel {
 	private BoardArray(byte[][] board, boolean blackTurn) {
 		this.board = board;
 		this.blackTurn = blackTurn;
+		// Reset turn time.
+		turnTime = System.currentTimeMillis();
 	}
 
 	/*
@@ -365,6 +371,8 @@ public class BoardArray implements BoardModel {
 		chambers = null;
 		// Change player turn;
 		blackTurn = !blackTurn;
+		// Reset turn time.
+		turnTime = System.currentTimeMillis();
 		// Succeeded.
 		return true;
 	}
@@ -499,6 +507,15 @@ public class BoardArray implements BoardModel {
 	 */
 	public boolean getTurn() {
 		return blackTurn;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see amazon.board.BoardModel#getTurn()
+	 */
+	public long getTime() {
+		return System.currentTimeMillis() - turnTime;
 	}
 
 	/**
