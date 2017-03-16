@@ -117,4 +117,11 @@ public interface BoardModel {
 	 * @return Whether its black player's turn.
 	 */
 	public boolean getTurn();
+
+	/**
+	 * Get the time in milliseconds since the start of the turn.
+	 * 
+	 * @return Milliseconds since start of current turn.
+	 */
+	public long getTime();
 }
