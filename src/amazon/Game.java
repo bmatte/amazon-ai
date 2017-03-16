@@ -74,8 +74,13 @@ public class Game {
 				}
 			}
 
-		// Play one game, and repeat if set to simulate (when not playing with
-		// client).
+		// Null client implies simulation mode.
+		boolean simulate = client == null;
+		// Time to delay turns and next game for simulations.
+		int simTurnWait = 100;
+		int simGameEndWait = 1000;
+
+		// Play one game, and repeat if set to simulate.
 		do {
 			// Max possible number of moves is 92.
 			for (int i = 0; i < 92; i++) {
@@ -102,25 +107,26 @@ public class Game {
 					// Stop if game is finished.
 					if (board.checkFinished())
 						break;
-					// XXX Wait, for testing.
-					try {
-						TimeUnit.MILLISECONDS.sleep(10);
-					} catch (InterruptedException e) {
-					}
+					// Wait at end of turn, for testing.
+					if (simulate)
+						try {
+							TimeUnit.MILLISECONDS.sleep(simTurnWait);
+						} catch (InterruptedException e) {
+						}
 				}
 			}
 
-			if (client == null) {
+			if (simulate) {
 				// Wait at end of game simulation.
 				try {
-					TimeUnit.MILLISECONDS.sleep(500);
+					TimeUnit.MILLISECONDS.sleep(simGameEndWait);
 				} catch (InterruptedException e) {
 				}
 				board.reinitialize();
 				if (view != null)
 					view.repaint();
 			}
-		} while (client == null);
+		} while (simulate);
 	}
 
 	/**
@@ -192,6 +198,6 @@ public class Game {
 		if (args.length == 1)
 			g = new Game(2, args[0], args[0]);
 		else
-			g = new Game(2, "group5", "group5");
+			g = new Game(2);
 	}
 }
