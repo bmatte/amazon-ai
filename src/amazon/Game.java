@@ -60,35 +60,33 @@ public class Game {
 			});
 		}
 
-		// Whether in a room.
-		boolean inRoom = false;
 		if (user.length() > 0) {
 			SmartFoxLobby lobby = new SmartFoxLobbyConsole();
 			client = new SmartFoxClient(user, pass, this, lobby);
 		}
 
 		// Wait until client assigns a player color.
-		while (client.isBlackPlayer() == null) {
-			try {
-				TimeUnit.MILLISECONDS.sleep(100);
-			} catch (InterruptedException e) {
+		if (client != null)
+			while (client.isBlackPlayer() == null) {
+				try {
+					TimeUnit.MILLISECONDS.sleep(100);
+				} catch (InterruptedException e) {
+				}
 			}
-		}
 
-		// XXX Simulate games.
-		boolean simulate = false;
-
-		// Play one game, and repeat if set to simulate.
+		// Play one game, and repeat if set to simulate (when not playing with
+		// client).
 		do {
 			// Max possible number of moves is 92.
 			for (int i = 0; i < 92; i++) {
-				// Wait while it's the other player's turn.
-				while (board.getTurn() != client.isBlackPlayer()) {
-					try {
-						TimeUnit.MILLISECONDS.sleep(100);
-					} catch (InterruptedException e) {
+				// Wait while it's the other (online) player's turn.
+				if (client != null)
+					while (board.getTurn() != client.isBlackPlayer()) {
+						try {
+							TimeUnit.MILLISECONDS.sleep(100);
+						} catch (InterruptedException e) {
+						}
 					}
-				}
 				// Get list of possible moves.
 				ArrayList<int[]> possibleMoves = board.possibleMoves();
 				if (possibleMoves.size() > 0) {
@@ -112,7 +110,7 @@ public class Game {
 				}
 			}
 
-			if (simulate) {
+			if (client == null) {
 				// Wait at end of game simulation.
 				try {
 					TimeUnit.MILLISECONDS.sleep(500);
@@ -122,7 +120,7 @@ public class Game {
 				if (view != null)
 					view.repaint();
 			}
-		} while (simulate);
+		} while (client == null);
 	}
 
 	/**
