@@ -8,8 +8,7 @@ public class SmartFoxLobbyConsole implements SmartFoxLobby {
 
 	SmartFoxClient client;
 
-	public SmartFoxLobbyConsole(SmartFoxClient client) {
-		this.client = client;
+	public SmartFoxLobbyConsole() {
 	}
 
 	@Override
@@ -25,9 +24,9 @@ public class SmartFoxLobbyConsole implements SmartFoxLobby {
 		System.out.println("List of game rooms:");
 		int roomIndexID = 0;
 		for (String roomName : list) {
-			System.out.println("ID#: " + roomIndexID++ + " name" + roomName);
+			System.out.println(roomIndexID++ + ": " + roomName);
 		}
-		System.out.print("Input room id: ");
+		System.out.print("Enter room ID: ");
 		Scanner reader = new Scanner(System.in);
 
 		boolean error = true;
@@ -35,7 +34,6 @@ public class SmartFoxLobbyConsole implements SmartFoxLobby {
 			int roomID = 0;
 			while (error) { // Check for errors and invalid input.
 				try {
-					System.out.println("Enter a number: ");
 					roomID = reader.nextInt();
 					if (roomID < 0 || roomID > roomIndexID) { // Valid range
 																// check.
@@ -48,8 +46,8 @@ public class SmartFoxLobbyConsole implements SmartFoxLobby {
 				}
 			}
 
-			String roomName = list.get(roomID);
-
+			// String roomName = list.get(roomID);
+			//
 			// System.out.println("join room "+ roomName + "? y/n"); //Room
 			// number confirmation.
 			// String yn = "";
@@ -66,6 +64,16 @@ public class SmartFoxLobbyConsole implements SmartFoxLobby {
 		} while (error);
 
 		reader.close();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see amazon.client.SmartFoxLobby#setClient(amazon.client.SmartFoxClient)
+	 */
+	@Override
+	public void setClient(SmartFoxClient client) {
+		this.client = client;
 	}
 
 }

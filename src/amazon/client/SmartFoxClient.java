@@ -19,6 +19,8 @@ public class SmartFoxClient extends GamePlayer implements ServerClient {
 	private String userName;
 	// Amazon game.
 	private Game game;
+	// Whether this player is black.
+	private Boolean blackPlayer;
 	// Smart Fox lobby room selection.
 	private SmartFoxLobby lobby;
 
@@ -35,6 +37,7 @@ public class SmartFoxClient extends GamePlayer implements ServerClient {
 		gameClient = new GameClient(userName, pass, this);
 		this.game = game;
 		this.lobby = lobby;
+		lobby.setClient(this);
 	}
 
 	@Override
@@ -61,9 +64,12 @@ public class SmartFoxClient extends GamePlayer implements ServerClient {
 		// Properly handle message by type.
 		if (messageType.equals(GameMessage.GAME_ACTION_START)) {
 
-			if (((String) msgDetails.get("player-black")).equals(this.userName())) {
-				System.out.println("Game State: " + msgDetails.get("player-black"));
-			}
+			if (msgDetails.get("player-black").equals(this.userName()))
+				// This player is black.
+				blackPlayer = true;
+			else
+				// This player is white.
+				blackPlayer = false;
 
 		} else if (messageType.equals(GameMessage.GAME_ACTION_MOVE)) {
 			handleOpponentMove(msgDetails);
@@ -139,5 +145,15 @@ public class SmartFoxClient extends GamePlayer implements ServerClient {
 	public void receiveMove(int rQI, int cQI, int rQF, int cQF, int rA, int cA) {
 		if (!game.move(false, rQI, cQI, rQF, cQF, rA, cA))
 			throw new IllegalArgumentException("Move from server is invalid on board!");
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see amazon.client.ServerClient#isBlackPlayer()
+	 */
+	@Override
+	public Boolean isBlackPlayer() {
+		return blackPlayer;
 	}
 }
