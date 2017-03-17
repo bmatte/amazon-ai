@@ -60,73 +60,83 @@ public class Game {
 			});
 		}
 
+		// Whether in a room.
+		boolean inRoom = false;
 		if (user.length() > 0) {
 			SmartFoxLobby lobby = new SmartFoxLobbyConsole();
 			client = new SmartFoxClient(user, pass, this, lobby);
 		}
 
-		// Wait until client assigns a player color.
-		if (client != null)
-			while (client.isBlackPlayer() == null) {
+		while (client.isBlackPlayer() == null) {
+			try {
+				TimeUnit.MILLISECONDS.sleep(10);
+			} catch (InterruptedException e) {
+			}
+		}
+
+		for (int i = 0; i < 1024; i++) {
+			while (board.getTurn() != client.isBlackPlayer()) {
 				try {
-					TimeUnit.MILLISECONDS.sleep(100);
+					TimeUnit.MILLISECONDS.sleep(10);
 				} catch (InterruptedException e) {
 				}
 			}
+			ArrayList<int[]> possibleMoves = board.possibleMoves();
+			if (possibleMoves.size() > 0) {
+				int[] m = possibleMoves.get((int) (possibleMoves.size() * Math.random()));
+				boolean moveM = move(true, m[0], m[1], m[2], m[3], m[4], m[5]);
+				// moveM = move(true,m[0], m[1], m[2], m[3], m[4], m[5]);
+				if (!moveM)
+					System.err.println(m[0] + " " + m[1] + " " + m[2] + " " + m[3] + " " + m[4] + " " + m[5]);
+				if (view != null)
+					view.repaint();
+				try {
+					TimeUnit.MILLISECONDS.sleep(10);
+				} catch (InterruptedException e) {
+				}
+			}
+		}
 
-		// Null client implies simulation mode.
-		boolean simulate = client == null;
-		// Time to delay turns and next game for simulations.
-		int simTurnWait = 100;
-		int simGameEndWait = 1000;
-
-		// Play one game, and repeat if set to simulate.
-		do {
-			// Max possible number of moves is 92.
-			for (int i = 0; i < 92; i++) {
-				// Wait while it's the other (online) player's turn.
-				if (client != null)
-					while (board.getTurn() != client.isBlackPlayer()) {
-						try {
-							TimeUnit.MILLISECONDS.sleep(100);
-						} catch (InterruptedException e) {
-						}
-					}
-				// Get list of possible moves.
+		// XXX Random move testing.
+		boolean simulate = false;
+		breakLabel: while (simulate) {
+			for (int i = 0; i < 1024; i++) {
 				ArrayList<int[]> possibleMoves = board.possibleMoves();
 				if (possibleMoves.size() > 0) {
 					int[] m = possibleMoves.get((int) (possibleMoves.size() * Math.random()));
-					boolean moveM = move(true, m[0], m[1], m[2], m[3], m[4], m[5]);
-					// Print move information if move was invalid.
-					if (!moveM)
-						System.err.println(
-								"{" + m[0] + "," + m[1] + "," + m[2] + "," + m[3] + "," + m[4] + "," + m[5] + "}");
-					// Repaint if a view exists.
+
+					// if (!boardModel.getTurn())
+					// // Move on to next queen if in its own chamber.
+					// if ((boardModel.getChambers()[1][m[0]][m[1]] == 0
+					// && boardModel.getChambers()[2][m[0]][m[1]] > 0)
+					// || (boardModel.getChambers()[1][m[0]][m[1]] > 0
+					// && boardModel.getChambers()[2][m[0]][m[1]] == 0))
+					// continue;
+
+					boolean move = board.move(m[0], m[1], m[2], m[3], m[4], m[5]);
+					if (!move) {
+						System.err.println(m[0] + " " + m[1] + " " + m[2] + " " + m[3] + " " + m[4] + " " + m[5]);
+						break breakLabel;
+					}
 					if (view != null)
 						view.repaint();
-					// Stop if game is finished.
+					try {
+						TimeUnit.MILLISECONDS.sleep(100);
+					} catch (InterruptedException e) {
+					}
 					if (board.checkFinished())
 						break;
-					// Wait at end of turn, for testing.
-					if (simulate)
-						try {
-							TimeUnit.MILLISECONDS.sleep(simTurnWait);
-						} catch (InterruptedException e) {
-						}
 				}
 			}
 
-			if (simulate) {
-				// Wait at end of game simulation.
-				try {
-					TimeUnit.MILLISECONDS.sleep(simGameEndWait);
-				} catch (InterruptedException e) {
-				}
-				board.reinitialize();
-				if (view != null)
-					view.repaint();
+			try {
+				TimeUnit.MILLISECONDS.sleep(5000);
+			} catch (InterruptedException e) {
 			}
-		} while (simulate);
+			board.reinitialize();
+			if (view != null)
+				view.repaint();
+		}
 	}
 
 	/**
@@ -194,10 +204,10 @@ public class Game {
 
 	/** Create and run the game. */
 	public static void main(String[] args) {
-		Game g = null;
+		Game g;
 		if (args.length == 1)
 			g = new Game(2, args[0], args[0]);
 		else
-			g = new Game(2);
+			g = new Game(2, "group5", "group5");
 	}
 }
