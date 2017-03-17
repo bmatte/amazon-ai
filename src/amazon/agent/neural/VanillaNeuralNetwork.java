@@ -1,8 +1,31 @@
 package amazon.agent.neural;
 
+import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.io.File;
 
 public class VanillaNeuralNetwork implements NeuralNetwork {
+
+	public static void main(String[] args) throws IOException {
+		float[] in = { 1f, 2f };
+		VanillaNeuralNetwork nn;
+		try {
+			nn = new VanillaNeuralNetwork("test.nn", 2, 3, 3, 2);
+			System.out.println("Loaded neural network from file.");
+		} catch (Exception e) {
+			System.out.println("Creating new neural network.");
+			nn = new VanillaNeuralNetwork(2, 3, 3, 2);
+		}
+		float[] out = nn.calc(in);
+		int[] answer = new int[out.length];
+		for (int i = 0; i < out.length; i++)
+			answer[i] = (int) (out[i] * 100);
+		System.out.println("Answer: " + Arrays.toString(answer));
+		nn.save("test.nn");
+	}
+
 	/**
 	 * Hierarchy of layers, nodes, and weights. Weight layer count is one less
 	 * than node layer count, due to input layer not having weights. Weight
@@ -64,7 +87,114 @@ public class VanillaNeuralNetwork implements NeuralNetwork {
 		}
 	}
 
-	/* (non-Javadoc)
+	/**
+	 * Load a given number of weights from a file and create a neural network.
+	 * 
+	 * @param filename
+	 *            Name of file to load weights from.
+	 * @param inputSize
+	 *            The number of input layer nodes.
+	 * @param hiddenSize
+	 *            The number of hidden layer nodes.
+	 * @param hiddenCount
+	 *            The number of hidden layers.
+	 * @param outputSize
+	 *            The number of output layer nodes.
+	 * @throws IOException
+	 */
+	public VanillaNeuralNetwork(String filename, int inputSize, int hiddenSize, int hiddenCount, int outputSize)
+			throws IOException {
+		// Read data from file.
+		File file = new File(filename);
+		RandomAccessFile raf = new RandomAccessFile(file, "rw");
+		byte[] fileData = new byte[(int) file.length()];
+		raf.readFully(fileData);
+		// Convert into weight floats.
+		float[] fileWeights = new float[fileData.length / 4];
+		// Current weight index.
+		int cW = 0;
+		for (int i = 0; i < fileWeights.length; i++) {
+			int bits = 0;
+			for (int j = 0; j < 4; j++) {
+				bits = bits | ((fileData[i * 4 + j] & 0xFF) << ((3 - j) * 8));
+			}
+			fileWeights[i] = Float.intBitsToFloat(bits);
+		}
+		raf.close();
+		if (fileData.length == 0)
+			throw new IOException("File is empty.");
+
+		// Create network's nodes and use weights from file.
+		int layerCount = hiddenCount + 2;
+		n = new ArrayList<>();
+		w = new ArrayList<>();
+		// Create input, hidden, and output layers.
+		for (int lI = 0; lI < layerCount; lI++) {
+			// Determine layer size and declare node values.
+			int size;
+			if (lI == 0)
+				size = inputSize;
+			else if (lI == layerCount - 1)
+				size = outputSize;
+			else
+				size = hiddenSize;
+			float[] nodes = new float[size];
+			// Add new layer of nodes.
+			n.add(nodes);
+			// Don't create weights after output layer.
+			if (lI >= layerCount - 1)
+				continue;
+			// Create weights for next layer.
+			ArrayList<float[]> weights = new ArrayList<>();
+			int nextLayerSize = lI >= layerCount - 2 ? outputSize : hiddenSize;
+			for (int nI = 0; nI < nextLayerSize; nI++) {
+				// Create an extra weight for node bias.
+				float[] nodeWeights = new float[size + 1];
+				// Use current file weight and increment.
+				for (int wI = 0; wI < nodeWeights.length; wI++)
+					nodeWeights[wI] = fileWeights[cW++];
+				weights.add(nodeWeights);
+			}
+			w.add(weights);
+		}
+		if (cW != fileWeights.length)
+			throw new IllegalArgumentException("Different number of weights in file!");
+	}
+
+	/**
+	 * Save this neural network's weights to file.
+	 * 
+	 * @param filename
+	 *            Filename to save to.
+	 * @throws IOException
+	 */
+	public void save(String filename) throws IOException {
+		// Write data to file.
+		File file = new File(filename);
+		RandomAccessFile raf = new RandomAccessFile(file, "rw");
+		raf.setLength(0);
+		// List of bytes to write.
+		ArrayList<Byte> bL = new ArrayList<>();
+		// Create input, hidden, and output layers.
+		for (int lI = 0; lI < w.size(); lI++) {
+			for (int nI = 0; nI < w.get(lI).size(); nI++) {
+				for (int wI = 0; wI < w.get(lI).get(nI).length; wI++) {
+					int bits = Float.floatToRawIntBits(w.get(lI).get(nI)[wI]);
+					for (int i = 0; i < 4; i++)
+						bL.add((byte) (bits >> ((3 - i) * 8)));
+				}
+			}
+		}
+		byte[] b = new byte[bL.size()];
+		for (int i = 0; i < bL.size(); i++)
+			b[i] = bL.get(i);
+		raf.write(b);
+		raf.close();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see amazon.agent.NeuralNetwork#calc(float[])
 	 */
 	@Override
@@ -98,7 +228,9 @@ public class VanillaNeuralNetwork implements NeuralNetwork {
 		return n.get(n.size() - 1);
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see amazon.agent.NeuralNetwork#train(float[], float[], double)
 	 */
 	@Override
