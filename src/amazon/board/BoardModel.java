@@ -124,4 +124,7 @@ public interface BoardModel {
 	 * @return Milliseconds since start of current turn.
 	 */
 	public long getTime();
+
+	/** Create a clone of this board. */
+	public BoardModel clone();
 }

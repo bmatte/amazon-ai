@@ -542,7 +542,11 @@ public class BoardArray implements BoardModel {
 		return queenLoc;
 	}
 
-	/** Create a clone of this board. */
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Object#clone()
+	 */
 	public BoardModel clone() {
 		return new BoardArray(getState(), blackTurn);
 	}

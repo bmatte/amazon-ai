@@ -156,9 +156,9 @@ public class BoardWindow implements BoardView {
 						// Draw board background.
 						g.setColor((i + j) % 2 == 0 ? gc(n, h) : gc(n, l));
 						g.fillRect(x, y, tW, tW);
-						// //XXX Label rows and columns.
-						// g.setColor((i + j) % 2 == 0 ? gc(n, l) : gc(n, h));
-						// g.drawString(i+""+j,x+tW/2-6,y+tW/2+4);
+						 //XXX Label rows and columns.
+						 g.setColor((i + j) % 2 == 0 ? gc(n, l) : gc(n, h));
+						 g.drawString(i+""+j,x+tW/2-6,y+tW/2+4);
 
 						// // Draw background lines.
 						// g.setColor((i + j) % 2 == 0 ? gc(n, l) : gc(n, h));
@@ -230,12 +230,14 @@ public class BoardWindow implements BoardView {
 							drawArrow(gg, gc(w, d), gc(w, l), gc(w, d), x, y, tW);
 						}
 
-						// XXX Draw chambers for debugging.
-						g.setColor(chamberColors[chambers[0][i][j]]);
-						g.fillRect(x + width + cP, y, tW, tW);
-						g.setColor(new Color(255, 255, 255));
-						g.drawString(Integer.toString((int) chambers[1][i][j]), x + width + cP, y + cP);
-						g.drawString(Integer.toString((int) chambers[2][i][j]), x + width + cP, y + cP + tW / 2);
+						// // XXX Draw chambers for debugging.
+						// g.setColor(chamberColors[chambers[0][i][j]]);
+						// g.fillRect(x + width + cP, y, tW, tW);
+						// g.setColor(new Color(255, 255, 255));
+						// g.drawString(Integer.toString((int)
+						// chambers[1][i][j]), x + width + cP, y + cP);
+						// g.drawString(Integer.toString((int)
+						// chambers[2][i][j]), x + width + cP, y + cP + tW / 2);
 					}
 				}
 				// XXX Draw points for debugging.
