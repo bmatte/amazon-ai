@@ -95,6 +95,28 @@ public class BoardArray implements BoardModel {
 		// Don't recalculate if not needed.
 		if (chambers != null)
 			return chambers;
+		byte[][][] both = getChambers(true, true);
+		byte[][][] black = getChambers(true, false);
+		byte[][][] white = getChambers(false, true);
+		for (int i = 0; i < getRowCount(); i++) {
+			for (int j = 0; j < getRowCount(); j++) {
+				both[1][i][j] = black[1][i][j];
+				both[2][i][j] = white[2][i][j];
+			}
+		}
+		// Save recalculated chambers.
+		chambers = both;
+		return both;
+	}
+
+	/**
+	 * @param countBlack
+	 *            Count black queens, and treat them as not blocking spaces.
+	 * @param countWhite
+	 *            Count white queens, and treat them as not blocking spaces.
+	 * @return Specific chamber array.
+	 */
+	public byte[][][] getChambers(boolean countBlack, boolean countWhite) {
 		// Initialize chamber labels and count as 0.
 		byte[][][] chambers = new byte[3][getRowCount()][getColumnCount()];
 		// Initialize chamber queen counts at -1 for non-chambers.
@@ -131,7 +153,7 @@ public class BoardArray implements BoardModel {
 					byte value = board[l[0]][l[1]];
 
 					// Check if empty or queen.
-					if (value == E || value == B || value == W) {
+					if (value == E || (value == B && countBlack) || (value == W && countWhite)) {
 						// Add location to found list.
 						found.add(new int[] { l[0], l[1] });
 						// Increase count if queen is found.
@@ -153,7 +175,7 @@ public class BoardArray implements BoardModel {
 								byte currValue = board[l[0] + rN][l[1] + cN];
 								// Add current location to check list if empty
 								// or queen, and unchecked.
-								if ((currValue == E || currValue == B || currValue == W)
+								if ((currValue == E || (currValue == B && countBlack) || (currValue == W && countWhite))
 										&& !checked[l[0] + rN][l[1] + cN]) {
 									check.add(new int[] { l[0] + rN, l[1] + cN });
 									// Mark location as checked.
@@ -178,8 +200,6 @@ public class BoardArray implements BoardModel {
 				label++;
 			}
 		}
-		// Save recalculated chambers.
-		this.chambers = chambers;
 		// Return board chamber representation array.
 		return chambers;
 	}

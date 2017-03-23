@@ -3,7 +3,9 @@ package amazon;
 import java.awt.EventQueue;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import amazon.agent.EvaluationFunction;
@@ -46,14 +48,27 @@ public class Game {
 	 * @throws IOException
 	 */
 	public Game(int viewOption, String user, String pass) {
+		// Load neural network.
+		NeuralNetwork nn = null;
+		String nnFilename = "amazon100.nn";
+		int hiddenSize = 100;
+		int hiddenCount = 1;
+		// Neural train mode.
+		boolean train = false;
+		// Probability of being random instead of determined.
+		double randomProb = 1;
+		// Time to delay turns and next game for simulations.
+		int simTurnWait = 00;
+		int simGameEndWait = 1000;
+		int turnTimeLimit = 3000;
+
 		// Create new board model.
 		board = new BoardArray();
 
-		// Load neural network.
-		NeuralNetwork nn = null;
-		String nnFilename = "amazon5.nn";
-		int hiddenSize = 5;
-		int hiddenCount = 1;
+		// Current number of games played.
+		long iteration = 0;
+
+		// Try loading neural network, or create new one.
 		try {
 			nn = new VanillaNeuralNetwork(nnFilename, 600, hiddenSize, hiddenCount, 1);
 		} catch (IOException e1) {
@@ -68,12 +83,14 @@ public class Game {
 		// Create evaluation function from neural network.
 		evalF = new NeuralEvaluationFunction(nn);
 
-		// Check if view should be shown.
-		if (viewOption == 1) {
+		// Don't create view if training.
+		if (!train)
+			// Check if view should be shown.
+			if (viewOption == 1) {
 			// Create board view.
 			view = new BoardASCII(board);
 			view.repaint();
-		} else if (viewOption == 2) {
+			} else if (viewOption == 2) {
 			// Create new window event.
 			EventQueue.invokeLater(new Runnable() {
 				public void run() {
@@ -85,12 +102,15 @@ public class Game {
 					}
 				}
 			});
-		}
+			}
 
 		if (user.length() > 0) {
 			SmartFoxLobby lobby = new SmartFoxLobbyConsole();
 			client = new SmartFoxClient(user, pass, this, lobby);
 		}
+
+		// Null client implies simulation mode.
+		boolean simulate = client == null || train;
 
 		// Wait until client assigns a player color.
 		if (client != null)
@@ -101,75 +121,115 @@ public class Game {
 				}
 			}
 
-		long iteration = 0;
-		// Neural train mode.
-		boolean train = false;
-		// Probability of being random instead of determined.
-		double randomProb = 0;
-		// Null client implies simulation mode.
-		boolean simulate = client == null || train;
-		// Time to delay turns and next game for simulations.
-		int simTurnWait = 5000;
-		int simGameEndWait = 1000;
-
 		// Play one game, and repeat if set to simulate.
 		do {
+			// Moves in current game.
+			int moves = 0;
 			// List of move states for current game.
 			ArrayList<byte[][]> gameStates = new ArrayList<>();
 			// Max possible number of moves is 92.
-			for (int i = 0; i < 4; i++) {
+			for (int i = 0; i < 92; i++) {
 				// Wait while it's the other (online) player's turn.
-				if (client != null)
+				if (!simulate)
 					while (board.getTurn() != client.isBlackPlayer()) {
 						try {
 							TimeUnit.MILLISECONDS.sleep(100);
 						} catch (InterruptedException e) {
 						}
 					}
+
 				// Get list of possible moves.
 				ArrayList<int[]> possibleMoves = board.possibleMoves();
 
 				if (possibleMoves.size() > 0) {
-					// Store best move index.
+					// List of ranks and indices.
+					CopyOnWriteArrayList<int[]> rankedIndices = new CopyOnWriteArrayList<>();
+					// Always random for training.
+					boolean random = train || (simulate && Math.random() < randomProb && !board.getTurn());
+					// Best move index to use, -1 for random.
 					int bestIndex = -1;
-					double bestRank = -1;
-					// Find best move.
-					if (Math.random() > randomProb) {
-						for (int j = 0; j < possibleMoves.size(); j++) {
-							// Get move parameters.
-							int[] m = possibleMoves.get(j);
+					// Find best move, if not random mode.
+					if (!random) {
+						// Create new thread pool.
+						ExecutorService pool = Executors.newWorkStealingPool();
 
-							// Check is move is a stupid move, i.e. queen is
-							// within own chamber.
-							if ((board.getChambers()[1][m[0]][m[1]] == 0 && board.getChambers()[2][m[0]][m[1]] > 0)
-									|| (board.getChambers()[1][m[0]][m[1]] > 0
-											&& board.getChambers()[2][m[0]][m[1]] == 0))
-								continue;
+						// For each depth of search.
+						for (int depth = 0; depth <= possibleMoves.size(); depth++) {
+							final int fDepth = depth;
+							for (int j = 0; j < possibleMoves.size(); j++) {
+								final int fJ = j;
+								// Execute current search in new thread.
+								pool.execute(new Runnable() {
+									@Override
+									public void run() {
+										// Get move parameters.
+										int[] m = possibleMoves.get(fJ);
+										// Clone board, simulate move, and get
+										// resulting state.
+										BoardModel simBoard = board.clone();
+										// Get the states before and after the
+										// simulated move.
+										byte[][] initialState = simBoard.getState();
+										simBoard.move(m[0], m[1], m[2], m[3], m[4], m[5]);
+										byte[][] finalState = simBoard.getState();
+										// Evaluate board state with a given
+										// depth.
+										double rank;
+										if (fDepth == 0)
+											rank = evalF.eF(initialState, finalState);
+										else
+											rank = evalBoard(simBoard, 1, fDepth);
+										// Change sign for specific player.
+										rank *= board.getTurn() ? 1 : -1;
+										// Check if move is a stupid move, i.e.
+										// queen is
+										// within own chamber.
+										if ((board.getChambers()[1][m[0]][m[1]] == 0
+												&& board.getChambers()[2][m[0]][m[1]] > 0)
+												|| (board.getChambers()[1][m[0]][m[1]] > 0
+														&& board.getChambers()[2][m[0]][m[1]] == 0))
+											rank -= 1;
+										// Add rank and index to master list.
+										rankedIndices.add(new int[] { (int) (rank * 1000000), fJ, fDepth });
+									}
+								});
+							}
 
-							// Get the initial state before the simulated move.
-							byte[][] initialState = board.getState();
-							// Clone board, simulate move, and get resulting
-							// state.
-							BoardModel simBoard = board.clone();
-							simBoard.move(m[0], m[1], m[2], m[3], m[4], m[5]);
-							byte[][] finalState = simBoard.getState();
-							board.getTurn();
-							double rank = evalF.eF(initialState, finalState);
-							// Change sign for specific player.
-							rank *= board.getTurn() ? 1 : -1;
-							if (rank > bestRank || bestIndex == -1) {
-								bestIndex = j;
-								bestRank = rank;
+							// Break if out of time, or max depth.
+							if (board.getTime() >= turnTimeLimit) {
+								break;
 							}
 						}
+
+						// Wait for time limit to finish.
+						while (board.getTime() < turnTimeLimit) {
+							try {
+								TimeUnit.MILLISECONDS.sleep(100);
+							} catch (InterruptedException e) {
+							}
+						}
+
+						// Shutdown thread pool.
+						pool.shutdownNow();
+
+						System.out.println(
+								"Searched " + rankedIndices.size() + " times from " + possibleMoves.size() + " moves.");
+						int bestRank = 0;
+						int bestDepth = 0;
+						for (int j = 0; j < rankedIndices.size(); j++)
+							if (rankedIndices.get(j)[0] > bestRank || bestIndex == -1) {
+								bestRank = rankedIndices.get(j)[0];
+								bestIndex = rankedIndices.get(j)[1];
+								bestDepth = rankedIndices.get(j)[2];
+							}
+						System.out.println("Best move found at " + bestDepth + " depth.");
 					}
-					if (simulate && !train && !board.getTurn())
-						bestIndex = -1;
-					// Save state before move.
-					gameStates.add(board.getState());
-					// Pick random move if not set.
+
 					if (bestIndex == -1)
 						bestIndex = (int) (Math.random() * possibleMoves.size());
+
+					// Save state before move.
+					gameStates.add(board.getState());
 					// Get best move parameters.
 					int[] m = possibleMoves.get(bestIndex);
 					boolean moveM = move(true, m[0], m[1], m[2], m[3], m[4], m[5]);
@@ -180,20 +240,19 @@ public class Game {
 					// Repaint if a view exists.
 					if (view != null)
 						view.repaint();
-					// Stop if game is finished.
-					if (board.checkFinished())
-						break;
+					// // Stop if game is finished.
+					// if (board.checkFinished())
+					// break;
 					// Wait at end of turn, for testing.
 					if (simulate && !train)
 						try {
 							TimeUnit.MILLISECONDS.sleep(simTurnWait);
 						} catch (InterruptedException e) {
 						}
-					try {
-						TimeUnit.MILLISECONDS.sleep(simTurnWait);
-					} catch (InterruptedException e) {
-					}
 				}
+				// Increment move count after black goes, or if online.
+				if (!simulate || board.getTurn())
+					moves++;
 			}
 
 			if (simulate) {
@@ -201,22 +260,26 @@ public class Game {
 				float[] output = {
 						((float) board.getPoints()[0][0] / (board.getPoints()[0][0] + board.getPoints()[0][1]) * 2
 								- 1) };
-				System.out.println(output[0]);
+				if (!train)
+					System.out.println(output[0]);
+				// output[0] = output[0]*output[0]*Math.signum(output[0]);
 				// Save final state.
 				gameStates.add(board.getState());
 				// Perform neural network training.
 				if (train) {
-					double error = -1;
-					for (int i = 0; i < (gameStates.size() - 1) * 10; i++) {
+					double error = 0;
+					int cycles = (gameStates.size() - 1) * 100;
+					for (int i = 0; i < cycles; i++) {
 						int j = (int) (Math.random() * (gameStates.size() - 1));
 						float[] input = NeuralEvaluationFunction.statesToFloat(gameStates.get(j),
 								gameStates.get(j + 1));
-						error = nn.train(input, output, 0.1);
+						error += nn.train(input, output, 0.1);
 					}
-					if (iteration % 10 == 0) {
+					error /= cycles;
+					if (iteration % 1 == 0) {
 						// Decrease random probability.
 						// randomProb -= 0.001;
-						// System.out.println(error);
+						System.out.println(error);
 						try {
 							// System.out.println("Saving Neural Network");
 							((VanillaNeuralNetwork) nn).save(nnFilename);
@@ -238,6 +301,30 @@ public class Game {
 			iteration++;
 		} while (simulate);
 
+	}
+
+	public double evalBoard(BoardModel boardState, int depth, int maxDepth) {
+		// Clone board for simulation.
+		BoardModel simBoard = boardState.clone();
+		// Evaluation rank.
+		double rank = 0;
+		// Get list of possible moves.
+		ArrayList<int[]> possibleMoves = simBoard.possibleMoves();
+		for (int i = 0; i < possibleMoves.size(); i++) {
+			// Get move parameters.
+			int[] m = possibleMoves.get(i);
+			// Get the states before and after the simulated move.
+			byte[][] initialState = simBoard.getState();
+			simBoard.move(m[0], m[1], m[2], m[3], m[4], m[5]);
+			byte[][] finalState = simBoard.getState();
+			if (depth >= maxDepth) {
+				rank += evalF.eF(initialState, finalState);
+			} else {
+				rank += evalBoard(simBoard, depth + 1, maxDepth);
+			}
+		}
+		rank /= possibleMoves.size();
+		return rank;
 	}
 
 	/**

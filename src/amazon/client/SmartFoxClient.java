@@ -134,6 +134,7 @@ public class SmartFoxClient extends GamePlayer implements ServerClient {
 	 * @see amazon.client.ServerClient#sendMove(int, int, int, int, int, int)
 	 */
 	public void sendMove(int rQI, int cQI, int rQF, int cQF, int rA, int cA) {
+		System.out.println("sendMove " + rQI + " " + cQI + " " + rQF + " " + cQF + " " + rA + " " + cA);
 		// Change index convention.
 		rQI = rTo(rQI);
 		rQF =  rTo(rQF);
@@ -141,7 +142,7 @@ public class SmartFoxClient extends GamePlayer implements ServerClient {
 		cQI =  cTo(cQI);
 		cQF =  cTo(cQF);
 		cA =  cTo(cA);
-		System.out.println("sendMove" + rQI + " " + cQI + " " + rQF + " " + cQF + " " + rA + " " + cA);
+		System.out.println("sendMove " + rQI + " " + cQI + " " + rQF + " " + cQF + " " + rA + " " + cA);
 		this.gameClient.sendMoveMessage(new int[] { rQI, cQI }, new int[] { rQF, cQF }, new int[] { rA, cA });
 	}
 
@@ -151,6 +152,7 @@ public class SmartFoxClient extends GamePlayer implements ServerClient {
 	 * @see amazon.client.ServerClient#receiveMove(int, int, int, int, int, int)
 	 */
 	public void receiveMove(int rQI, int cQI, int rQF, int cQF, int rA, int cA) {
+		System.out.println("receiveMove " + rQI + " " + cQI + " " + rQF + " " + cQF + " " + rA + " " + cA);
 		// Change index convention.
 		rQI = rFrom(rQI);
 		rQF =  rFrom(rQF);
@@ -158,29 +160,29 @@ public class SmartFoxClient extends GamePlayer implements ServerClient {
 		cQI =  cFrom(cQI);
 		cQF =  cFrom(cQF);
 		cA =  cFrom(cA);
-		System.out.println("receiveMove" + rQI + " " + cQI + " " + rQF + " " + cQF + " " + rA + " " + cA);
+		System.out.println("receiveMove " + rQI + " " + cQI + " " + rQF + " " + cQF + " " + rA + " " + cA);
 		if (!game.move(false, rQI, cQI, rQF, cQF, rA, cA))
 			throw new IllegalArgumentException("Move from server is invalid on board!");
 	}
 
 	/** Convert row index to client row index. */
 	private int rTo(int y) {
-		return 10 - y;
+		return y+1;
 	}
 	
 	/** Convert column index to client column index. */
 	private int cTo(int x) {
-		return x+1;
+		return 10-x;
 	}
 
 	/** Convert client row index to row index. */
 	private int rFrom(int y) {
-		return 10 - y;
+		return y-1;
 	}
 
 	/** Convert client column index to column index. */
 	private int cFrom(int x) {
-		return x-1;
+		return 10-x;
 	}
 
 	/*
