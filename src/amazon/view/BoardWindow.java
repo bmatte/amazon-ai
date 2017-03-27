@@ -251,7 +251,7 @@ public class BoardWindow implements BoardView {
 				double ratio = (double) boardModel.getPoints()[0][1]
 						/ (boardModel.getPoints()[0][0] + boardModel.getPoints()[0][1]);
 				int left = cP;
-				int right = width * 2 - cP;
+				int right = width - cP;
 				int mid = (int) (left + (right - left) * 0.5);
 				int win = (int) (left + (right - left) * ratio);
 				drawQueen(gg, gc(b, p), gc(b, h), gc(b, p), left, cP * 4 + width, tW);

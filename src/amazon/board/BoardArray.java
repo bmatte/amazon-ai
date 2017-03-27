@@ -56,7 +56,7 @@ public class BoardArray implements BoardModel {
 	public void reinitialize() {
 		// Create new empty board array.
 		board = new byte[10][10];
-		// Add initiaL queens.
+		// Add initial queens.
 		board[6][0] = B;
 		board[6][9] = B;
 		board[9][3] = B;
@@ -116,7 +116,7 @@ public class BoardArray implements BoardModel {
 	 *            Count white queens, and treat them as not blocking spaces.
 	 * @return Specific chamber array.
 	 */
-	public byte[][][] getChambers(boolean countBlack, boolean countWhite) {
+	private byte[][][] getChambers(boolean countBlack, boolean countWhite) {
 		// Initialize chamber labels and count as 0.
 		byte[][][] chambers = new byte[3][getRowCount()][getColumnCount()];
 		// Initialize chamber queen counts at -1 for non-chambers.

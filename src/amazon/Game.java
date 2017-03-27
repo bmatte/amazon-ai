@@ -9,7 +9,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import amazon.agent.EvaluationFunction;
-import amazon.agent.NeuralEvaluationFunction;
+import amazon.agent.NeuralFunction;
+import amazon.agent.ScoreFunction;
 import amazon.agent.neural.NeuralNetwork;
 import amazon.agent.neural.VanillaNeuralNetwork;
 import amazon.board.BoardArray;
@@ -36,6 +37,32 @@ public class Game {
 	// Evaluation function for AI.
 	private EvaluationFunction evalF;
 
+	// Size of neural network hidden layers.
+	int hiddenSize = 5;
+	// Count of neural network hidden layers.
+	int hiddenCount = 1;
+	// Neural network filename.
+	String nnFilename = "amazon" + hiddenSize + "_" + hiddenCount + ".nn";
+
+	// Neural train mode.
+	boolean train = false;
+	// Use point ratio differential heuristic in addition to neural heuristic.
+	boolean usePointRatioDifferential = true;
+
+	// Probability of being random instead of determined.
+	double randomProb = 1;
+	// Time limit of each turn.
+	int turnTimeLimit = 3000;
+
+	// Time to delay each turn and next game for simulations.
+	int simTurnWait = 00;
+	int simGameEndWait = 1000;
+
+	// Print move search results to console.
+	boolean printMoveSearch = true;
+	// Print game result score ratio to console.
+	boolean printResult = false;
+
 	/**
 	 * Create a new game.
 	 * 
@@ -48,31 +75,18 @@ public class Game {
 	 * @throws IOException
 	 */
 	public Game(int viewOption, String user, String pass) {
-		// Load neural network.
-		NeuralNetwork nn = null;
-		String nnFilename = "amazon100.nn";
-		int hiddenSize = 100;
-		int hiddenCount = 1;
-		// Neural train mode.
-		boolean train = false;
-		// Probability of being random instead of determined.
-		double randomProb = 1;
-		// Time to delay turns and next game for simulations.
-		int simTurnWait = 00;
-		int simGameEndWait = 1000;
-		int turnTimeLimit = 3000;
-
 		// Create new board model.
 		board = new BoardArray();
-
 		// Current number of games played.
 		long iteration = 0;
+		// New neural network.
+		NeuralNetwork nn = null;
 
 		// Try loading neural network, or create new one.
 		try {
-			nn = new VanillaNeuralNetwork(nnFilename, 600, hiddenSize, hiddenCount, 1);
+			nn = new VanillaNeuralNetwork(nnFilename, 3001, hiddenSize, hiddenCount, 1);
 		} catch (IOException e1) {
-			nn = new VanillaNeuralNetwork(600, hiddenSize, hiddenCount, 1);
+			nn = new VanillaNeuralNetwork(3001, hiddenSize, hiddenCount, 1);
 			try {
 				((VanillaNeuralNetwork) nn).save(nnFilename);
 			} catch (IOException e) {
@@ -81,7 +95,7 @@ public class Game {
 		}
 
 		// Create evaluation function from neural network.
-		evalF = new NeuralEvaluationFunction(nn);
+		evalF = new NeuralFunction(nn);
 
 		// Don't create view if training.
 		if (!train)
@@ -126,7 +140,7 @@ public class Game {
 			// Moves in current game.
 			int moves = 0;
 			// List of move states for current game.
-			ArrayList<byte[][]> gameStates = new ArrayList<>();
+			ArrayList<BoardModel> gameBoardStates = new ArrayList<>();
 			// Max possible number of moves is 92.
 			for (int i = 0; i < 92; i++) {
 				// Wait while it's the other (online) player's turn.
@@ -170,15 +184,26 @@ public class Game {
 										// Get the states before and after the
 										// simulated move.
 										byte[][] initialState = simBoard.getState();
+										byte[][][] initialChambers = simBoard.getChambers();
 										simBoard.move(m[0], m[1], m[2], m[3], m[4], m[5]);
 										byte[][] finalState = simBoard.getState();
+										byte[][][] finalChambers = simBoard.getChambers();
 										// Evaluate board state with a given
 										// depth.
-										double rank;
-										if (fDepth == 0)
-											rank = evalF.eF(initialState, finalState);
-										else
+										double rank = Math.random() * 0.001;
+										if (fDepth == 0) {
+											rank = evalF.eF(!simBoard.getTurn(), initialState, initialChambers,
+													finalState, finalChambers);
+											// Score ratio difference.
+											if (usePointRatioDifferential) {
+												double sRank = (new ScoreFunction()).eF(!simBoard.getTurn(),
+														initialState, initialChambers, finalState, finalChambers) * 10;
+												// System.out.println(rank+"\t"+sRank);
+												rank += sRank;
+											}
+										} else {
 											rank = evalBoard(simBoard, 1, fDepth);
+										}
 										// Change sign for specific player.
 										rank *= board.getTurn() ? 1 : -1;
 										// Check if move is a stupid move, i.e.
@@ -212,8 +237,9 @@ public class Game {
 						// Shutdown thread pool.
 						pool.shutdownNow();
 
-						System.out.println(
-								"Searched " + rankedIndices.size() + " times from " + possibleMoves.size() + " moves.");
+						if (printMoveSearch)
+							System.out.println("Searched " + rankedIndices.size() + " times from "
+									+ possibleMoves.size() + " moves.");
 						int bestRank = 0;
 						int bestDepth = 0;
 						for (int j = 0; j < rankedIndices.size(); j++)
@@ -222,14 +248,15 @@ public class Game {
 								bestIndex = rankedIndices.get(j)[1];
 								bestDepth = rankedIndices.get(j)[2];
 							}
-						System.out.println("Best move found at " + bestDepth + " depth.");
+						if (printMoveSearch)
+							System.out.println("Best move found at " + bestDepth + " depth.");
 					}
 
 					if (bestIndex == -1)
 						bestIndex = (int) (Math.random() * possibleMoves.size());
 
 					// Save state before move.
-					gameStates.add(board.getState());
+					gameBoardStates.add(board.clone());
 					// Get best move parameters.
 					int[] m = possibleMoves.get(bestIndex);
 					boolean moveM = move(true, m[0], m[1], m[2], m[3], m[4], m[5]);
@@ -260,20 +287,28 @@ public class Game {
 				float[] output = {
 						((float) board.getPoints()[0][0] / (board.getPoints()[0][0] + board.getPoints()[0][1]) * 2
 								- 1) };
-				if (!train)
+				if (printResult && !train)
 					System.out.println(output[0]);
 				// output[0] = output[0]*output[0]*Math.signum(output[0]);
 				// Save final state.
-				gameStates.add(board.getState());
+				gameBoardStates.add(board.clone());
 				// Perform neural network training.
 				if (train) {
 					double error = 0;
-					int cycles = (gameStates.size() - 1) * 100;
+					int cycles = (gameBoardStates.size() - 1) * 100;
 					for (int i = 0; i < cycles; i++) {
-						int j = (int) (Math.random() * (gameStates.size() - 1));
-						float[] input = NeuralEvaluationFunction.statesToFloat(gameStates.get(j),
-								gameStates.get(j + 1));
-						error += nn.train(input, output, 0.1);
+						int j = (int) (Math.random() * (gameBoardStates.size() - 1));
+						// Get parameters from the board state before and after
+						// the given move.
+						boolean moveTurn = gameBoardStates.get(j).getTurn();
+						byte[][] initialState = gameBoardStates.get(j).getState();
+						byte[][][] initialChambers = gameBoardStates.get(j).getChambers();
+						byte[][] finalState = gameBoardStates.get(j + 1).getState();
+						byte[][][] finalChambers = gameBoardStates.get(j + 1).getChambers();
+						// Calculate states to neural network float input.
+						float[] input = NeuralFunction.statesToFloat(moveTurn, initialState, initialChambers,
+								finalState, finalChambers);
+						error += nn.train(input, output, 0.1) / 2;
 					}
 					error /= cycles;
 					if (iteration % 1 == 0) {
@@ -307,7 +342,7 @@ public class Game {
 		// Clone board for simulation.
 		BoardModel simBoard = boardState.clone();
 		// Evaluation rank.
-		double rank = 0;
+		double rank = Math.random() * 0.001;
 		// Get list of possible moves.
 		ArrayList<int[]> possibleMoves = simBoard.possibleMoves();
 		for (int i = 0; i < possibleMoves.size(); i++) {
@@ -315,10 +350,17 @@ public class Game {
 			int[] m = possibleMoves.get(i);
 			// Get the states before and after the simulated move.
 			byte[][] initialState = simBoard.getState();
+			byte[][][] initialChambers = simBoard.getChambers();
 			simBoard.move(m[0], m[1], m[2], m[3], m[4], m[5]);
 			byte[][] finalState = simBoard.getState();
+			byte[][][] finalChambers = simBoard.getChambers();
 			if (depth >= maxDepth) {
-				rank += evalF.eF(initialState, finalState);
+				rank = evalF.eF(!simBoard.getTurn(), initialState, initialChambers, finalState, finalChambers);
+				if (usePointRatioDifferential) {
+					double sRank = (new ScoreFunction()).eF(!simBoard.getTurn(), initialState, initialChambers,
+							finalState, finalChambers) * 10;
+					rank += sRank;
+				}
 			} else {
 				rank += evalBoard(simBoard, depth + 1, maxDepth);
 			}
