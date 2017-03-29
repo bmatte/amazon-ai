@@ -91,7 +91,7 @@ public interface BoardModel {
 	 * third arrays represent the number of black and white queens contained in
 	 * each chamber.
 	 * 
-	 * @return Validity of piece move.
+	 * @return Chamber ownership array.
 	 */
 	public byte[][][] getChambers();
 
@@ -124,4 +124,7 @@ public interface BoardModel {
 	 * @return Milliseconds since start of current turn.
 	 */
 	public long getTime();
+
+	/** Create a clone of this board. */
+	public BoardModel clone();
 }
