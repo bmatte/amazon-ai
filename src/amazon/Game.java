@@ -50,9 +50,9 @@ public class Game {
 	boolean usePointRatioDifferential = true;
 
 	// Probability of being random instead of determined.
-	double randomProb = 1;
+	double randomProb = 0;
 	// Time limit of each turn.
-	int turnTimeLimit = 3000;
+	int turnTimeLimit = 25000;
 
 	// Time to delay each turn and next game for simulations.
 	int simTurnWait = 00;
@@ -190,15 +190,16 @@ public class Game {
 										byte[][][] finalChambers = simBoard.getChambers();
 										// Evaluate board state with a given
 										// depth.
-										double rank = Math.random() * 0.001;
+										double rank = 0;
 										if (fDepth == 0) {
 											rank = evalF.eF(!simBoard.getTurn(), initialState, initialChambers,
 													finalState, finalChambers);
 											// Score ratio difference.
 											if (usePointRatioDifferential) {
 												double sRank = (new ScoreFunction()).eF(!simBoard.getTurn(),
-														initialState, initialChambers, finalState, finalChambers) * 10;
-												// System.out.println(rank+"\t"+sRank);
+														initialState, initialChambers, finalState, finalChambers) * 100;
+												// System.out.println(rank +
+												// "\t" + sRank);
 												rank += sRank;
 											}
 										} else {
@@ -213,7 +214,7 @@ public class Game {
 												&& board.getChambers()[2][m[0]][m[1]] > 0)
 												|| (board.getChambers()[1][m[0]][m[1]] > 0
 														&& board.getChambers()[2][m[0]][m[1]] == 0))
-											rank -= 1;
+											rank -= 10000000;
 										// Add rank and index to master list.
 										rankedIndices.add(new int[] { (int) (rank * 1000000), fJ, fDepth });
 									}
@@ -295,7 +296,7 @@ public class Game {
 				// Perform neural network training.
 				if (train) {
 					double error = 0;
-					int cycles = (gameBoardStates.size() - 1) * 100;
+					int cycles = (gameBoardStates.size() - 1) * 1000;
 					for (int i = 0; i < cycles; i++) {
 						int j = (int) (Math.random() * (gameBoardStates.size() - 1));
 						// Get parameters from the board state before and after
@@ -342,7 +343,7 @@ public class Game {
 		// Clone board for simulation.
 		BoardModel simBoard = boardState.clone();
 		// Evaluation rank.
-		double rank = Math.random() * 0.001;
+		double rank = 0;
 		// Get list of possible moves.
 		ArrayList<int[]> possibleMoves = simBoard.possibleMoves();
 		for (int i = 0; i < possibleMoves.size(); i++) {
@@ -358,7 +359,7 @@ public class Game {
 				rank = evalF.eF(!simBoard.getTurn(), initialState, initialChambers, finalState, finalChambers);
 				if (usePointRatioDifferential) {
 					double sRank = (new ScoreFunction()).eF(!simBoard.getTurn(), initialState, initialChambers,
-							finalState, finalChambers) * 10;
+							finalState, finalChambers) * 100;
 					rank += sRank;
 				}
 			} else {

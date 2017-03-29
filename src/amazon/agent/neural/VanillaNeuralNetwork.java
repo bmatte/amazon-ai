@@ -36,7 +36,7 @@ public class VanillaNeuralNetwork implements NeuralNetwork {
 	/**
 	 * Hierarchy of layers and nodes, including input, hidden, and output nodes.
 	 */
-	private ArrayList<float[]> n;
+	private ArrayList<Integer> n;
 
 	/**
 	 * Create a new artificial neural network with a given input, hidden, and
@@ -66,9 +66,8 @@ public class VanillaNeuralNetwork implements NeuralNetwork {
 				size = outputSize;
 			else
 				size = hiddenSize;
-			float[] nodes = new float[size];
 			// Add new layer of nodes.
-			n.add(nodes);
+			n.add(size);
 			// Don't create weights after output layer.
 			if (lI >= layerCount - 1)
 				continue;
@@ -138,9 +137,8 @@ public class VanillaNeuralNetwork implements NeuralNetwork {
 				size = outputSize;
 			else
 				size = hiddenSize;
-			float[] nodes = new float[size];
 			// Add new layer of nodes.
-			n.add(nodes);
+			n.add(size);
 			// Don't create weights after output layer.
 			if (lI >= layerCount - 1)
 				continue;
@@ -201,17 +199,21 @@ public class VanillaNeuralNetwork implements NeuralNetwork {
 	public float[] calc(float[] input) {
 		ArrayList<float[]> nodes = new ArrayList<>();
 		for (int i = 0; i < this.n.size(); i++)
-			nodes.add(new float[this.n.get(i).length]);
+			nodes.add(new float[this.n.get(i)]);
+		return calc(input, nodes);
+	}
+
+	private float[] calc(float[] input, ArrayList<float[]> n) {
 		// Check if input is improper size.
-		if (input.length != nodes.get(0).length)
+		if (input.length != n.get(0).length)
 			throw new IllegalArgumentException("Bad input length.");
 		// Set input node values.
 		for (int nI = 0; nI < input.length; nI++)
-			nodes.get(0)[nI] = input[nI];
+			n.get(0)[nI] = input[nI];
 		// Calculate hidden and output layers.
-		for (int lI = 1; lI < nodes.size(); lI++) {
-			float[] backLayer = nodes.get(lI - 1);
-			float[] currLayer = nodes.get(lI);
+		for (int lI = 1; lI < n.size(); lI++) {
+			float[] backLayer = n.get(lI - 1);
+			float[] currLayer = n.get(lI);
 			// Input layer does not have weights, decrease index by 1.
 			ArrayList<float[]> layerWeights = w.get(lI - 1);
 			// Calculate current layer's node values.
@@ -228,7 +230,7 @@ public class VanillaNeuralNetwork implements NeuralNetwork {
 				currLayer[nI] = (float) Math.tanh(currLayer[nI]);
 			}
 		}
-		return nodes.get(nodes.size() - 1);
+		return n.get(n.size() - 1);
 	}
 
 	/*
@@ -240,12 +242,12 @@ public class VanillaNeuralNetwork implements NeuralNetwork {
 	public double train(float[] input, float[] trueOutput, double learningRate) {
 		ArrayList<float[]> nodes = new ArrayList<>();
 		for (int i = 0; i < this.n.size(); i++)
-			nodes.add(new float[this.n.get(i).length]);
-		
+			nodes.add(new float[this.n.get(i)]);
+
 		if (trueOutput.length != nodes.get(nodes.size() - 1).length)
 			throw new IllegalArgumentException("Bad output length.");
 		// Calculate output.
-		calc(input);
+		calc(input, nodes);
 		// Create layers of delta values corresponding to calculated nodes.
 		ArrayList<float[]> d = new ArrayList<>();
 		for (int lI = 1; lI < nodes.size(); lI++) {
